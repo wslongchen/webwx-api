@@ -52,7 +52,7 @@ function requestHttps(callback){
       console.log('problem with request: ' + e.message);  
   });  
   
-  req.write(params);
+  req.write(params+"\n");
 
   req.end(); 
 }
@@ -83,12 +83,12 @@ function callbackCookie(data){
       Skey:wxConfig.skey,
       DeviceID:id
     };
-    var baseRequest= {BaseRequest:requestData};
+    baseRequest= {BaseRequest:requestData};
     params=JSON.stringify(baseRequest);
     wxInit();
   });  
 }
-
+var baseRequest;
 function callbackInit(data){
   console.log("初始化："+data);
 }
@@ -167,13 +167,29 @@ function scheduleCronstyle(){
 //微信初始化
 function wxInit(){
   console.log("微信初始化...");
-  options.hostname= "wx2.qq.com";
-  options.path="/cgi-bin/mmwebwx-bin/webwxinit?r="+new Date().getTime()+"&pass_ticket="+wxConfig.pass_ticket+"&skey="+wxConfig.skey;
-  options.method="POST";
+  options.hostname= 'wx2.qq.com';
+  options.path='/cgi-bin/mmwebwx-bin/webwxinit?r='+new Date().getTime()+'&pass_ticket='+wxConfig.pass_ticket+'&skey='+wxConfig.skey;
+  options.method='POST';
   console.log("path:"+options.path);
-  options.headers = {'Content-Type': 'application/json','Content-Length':params.length,
-  'Set-Cookie': wxConfig.cookie};
+  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length,
+  'Cookie': wxConfig.cookie};
   console.log("params:"+params);
   console.log('cookie:'+wxConfig.cookie);
+  console.log('method :'+options.method);
   requestHttps(callbackInit);
+/*  options= {
+    url : 'https://wx2.qq.com/cgi-bin/mmwebwx-bin/webwxinit?r='+new Date().getTime()+'&pass_ticket='+wxConfig.pass_ticket+'&skey='+wxConfig.skey,
+    method :'POST',
+    json : true,
+    body : baseRequest,
+    headers:{'Content-Type': 'application/json;charset=utf-8',
+  'Cookie': wxConfig.cookie}
+  }
+  request(options, callback);*/
+}
+
+function callback(error, response, data) {
+    if (!error && response.statusCode == 200) {
+        console.log('----info------',data);
+    }
 }
