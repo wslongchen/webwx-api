@@ -244,7 +244,6 @@ function callbackWebwxsync(data){
 
 function callbackWebwxsendmsg(data){
   var result=JSON.parse(data);
-  console.log("消息发送:"+data);
   if(result.BaseResponse.Ret==0){
     console.log("消息发送成功...");
   }else{
@@ -301,7 +300,6 @@ function webwxsendmsg(msg){
   var data={BaseRequest : requestData,
     Msg:msg};
   params=JSON.stringify(data);
-  console.log("发送数据"+params);
   options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length};
   requestHttps(callbackWebwxsendmsg);
 }
