@@ -203,7 +203,7 @@ function callbackStatusNotify(data){
   var result=JSON.parse(data);
   if(result.BaseResponse.Ret==0){
     console.log("开启微信状态通知成功...");
-    sendTextMessage('测试消息哟...',user.UserName,'@6c832cae40abda435beba3b5aa8051c4');
+    sendTextMessage('1',user.UserName,'filehelper');
   }else{
     console.log("开启微信状态通知失败...");
   }
@@ -242,8 +242,9 @@ function callbackWebwxsync(data){
   }
 }
 
-function webwxsendmsg(data){
+function callbackWebwxsendmsg(data){
   var result=JSON.parse(data);
+  console.log("消息发送:"+data);
   if(result.BaseResponse.Ret==0){
     console.log("消息发送成功...");
   }else{
@@ -288,7 +289,7 @@ function webwxsync(){
 //发送消息
 function webwxsendmsg(msg){
   options.hostname="wx.qq.com";
-  options.path='/cgi-bin/mmwebwx-bin/webwxsendmsg?lang=zh_CN&pass_ticket='+wxConfig.pass_ticket;
+  options.path='/cgi-bin/mmwebwx-bin/webwxsendmsg?lang=zh_CN&sid='+wxConfig.wxsid+'&pass_ticket='+wxConfig.pass_ticket+'&skey='+wxConfig.skey;
   options.method='POST';
   var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   var requestData={
@@ -297,10 +298,12 @@ function webwxsendmsg(msg){
     Skey:wxConfig.skey,
     DeviceID:id
   };
-  var data={BaseRequest : requestData,Msg:msg,Scene:0};
+  var data={BaseRequest : requestData,
+    Msg:msg};
   params=JSON.stringify(data);
+  console.log("发送数据"+params);
   options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length};
-  requestHttps(webwxsendmsg);
+  requestHttps(callbackWebwxsendmsg);
 }
 
 function sendTextMessage(content,from,to){
@@ -310,10 +313,10 @@ function sendTextMessage(content,from,to){
       FromUserName: from,
       ToUserName : to,
       LocalID: id,
-      ClientMsgId: id
+      ClientMsgId:id
     };
     console.log('发送文字消息：'+content);
-  webwxsendmsg(msg);
+    webwxsendmsg(msg);
 }
 
 //登陆以及微信初始化
