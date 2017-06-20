@@ -8,6 +8,8 @@ var schedule = require('node-schedule');
 var xmlreader = require("xmlreader"); 
 var job;
 var params="";
+var user ={};
+var syncKey={};
 var wxConfig= {
   skey : '',
   wxsid : '',
@@ -26,8 +28,9 @@ var options = {
     port: 443,  
     path: '/jslogin?' + qs.stringify(data),  
     method: 'GET',
+    rejectUnauthorized: false,
+    requestCert: true,
     headers : {
-
     }  
 };
 var uid="";
@@ -40,11 +43,11 @@ function requestHttps(callback){
     var responseString = '';
     wxConfig.cookie=headers['set-cookie'];
     res.on('data', function (chunk) { 
-        callback(chunk);
+        
         responseString += chunk;
     });  
     res.on('end', function() {
-      console.log('-----resBody-----',responseString);
+      callback(responseString);
     });
   });  
   
@@ -76,7 +79,7 @@ function callbackCookie(data){
     wxConfig.wxsid=response.error.wxsid.text();
     wxConfig.wxuin=response.error.wxuin.text();
     wxConfig.pass_ticket= response.error.pass_ticket.text();
-    var id="e"+ new Date().getTime();
+    var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
     var requestData={
       Uin:wxConfig.wxuin,
       Sid:wxConfig.wxsid,
@@ -90,7 +93,16 @@ function callbackCookie(data){
 }
 var baseRequest;
 function callbackInit(data){
-  console.log("初始化："+data);
+  var result=JSON.parse(data);
+  if(result.BaseResponse.Ret==0){
+    console.log("初始化成功，昵称为："+result.User.NickName);
+    user=result.User;
+    syncKey=result.SyncKey;
+    //开启状态通知
+    wxStatusNotify();
+  }else{
+    console.log("初始化微信失败~~~");
+  }
 }
 
 function callbackLogin(data){
@@ -110,22 +122,16 @@ function callbackLogin(data){
         tips=0;
         console.log("扫描成功,在微信客户端点击确认");
       }else if(code ==408){
-        //登录超时
-        console.log("登录超时，请重新扫描");
+        //超时
       }else{
         console.log("登陆中..."+data+",");
       }
   }
 }
 
-exports.getUUID = function(){
-  //发起请求
-  requestHttps(callbackQrCode);
-}
-
 function showQrCode(uuid){
   request('https://login.weixin.qq.com/qrcode/'+uuid).pipe(fs.createWriteStream('qrcode.png'));
-  console.log("二维码下载完成");
+  console.log("二维码下载完成..");
   scheduleCronstyle();
 }
 
@@ -141,7 +147,7 @@ function login(url){
   var host=url.match(/\/\/(\S*)\/cgi-bin/)[1];
   var p=url.match(/com(\S*)/)[1];
   options.hostname=host;
-  options.path=p;
+  options.path=p+'&fun=new&version=v2';
   requestHttps(callbackCookie);
 }
 
@@ -167,29 +173,149 @@ function scheduleCronstyle(){
 //微信初始化
 function wxInit(){
   console.log("微信初始化...");
-  options.hostname= 'wx2.qq.com';
+  options.hostname= 'wx.qq.com';
   options.path='/cgi-bin/mmwebwx-bin/webwxinit?r='+new Date().getTime()+'&pass_ticket='+wxConfig.pass_ticket+'&skey='+wxConfig.skey;
   options.method='POST';
-  console.log("path:"+options.path);
   options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length,
   'Cookie': wxConfig.cookie};
-  console.log("params:"+params);
-  console.log('cookie:'+wxConfig.cookie);
-  console.log('method :'+options.method);
   requestHttps(callbackInit);
-/*  options= {
-    url : 'https://wx2.qq.com/cgi-bin/mmwebwx-bin/webwxinit?r='+new Date().getTime()+'&pass_ticket='+wxConfig.pass_ticket+'&skey='+wxConfig.skey,
-    method :'POST',
-    json : true,
-    body : baseRequest,
-    headers:{'Content-Type': 'application/json;charset=utf-8',
-  'Cookie': wxConfig.cookie}
-  }
-  request(options, callback);*/
 }
 
-function callback(error, response, data) {
-    if (!error && response.statusCode == 200) {
-        console.log('----info------',data);
-    }
+//开启微信状态通知
+function wxStatusNotify(){
+  options.hostname="wx.qq.com";
+  options.path='/cgi-bin/mmwebwx-bin/webwxstatusnotify';
+  options.method='POST';
+  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  var requestData={
+    Uin:wxConfig.wxuin,
+    Sid:wxConfig.wxsid,
+    Skey:wxConfig.skey,
+    DeviceID:id
+  };
+  var data={BaseRequest : requestData,Code:3,FromUserName:user.UserName};
+  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':JSON.stringify(data).length};
+  requestHttps(callbackStatusNotify);
+}
+
+function callbackStatusNotify(data){
+  var result=JSON.parse(data);
+  if(result.BaseResponse.Ret==0){
+    console.log("开启微信状态通知成功...");
+    sendTextMessage('测试消息哟...',user.UserName,'@6c832cae40abda435beba3b5aa8051c4');
+  }else{
+    console.log("开启微信状态通知失败...");
+  }
+}
+function callbackContact(data){
+  var result=JSON.parse(data);
+  if(result.BaseResponse.Ret==0){
+    console.log("获取联系人列表成功...");
+    return data;
+  }else{
+    console.log("获取联系人列表失败...");
+  }
+}
+function callbackSyncCheck(data){
+   var check=data.match(/syncheck=(\S*)/)[1];
+   var result=JSON.parse(check);
+   if(result.retcode!=0){
+      console.log("失败/退出微信...");
+   }else{
+      if(result.selector==0){
+        //正常
+      }else if(result.selector==2){
+        //新消息
+      }else if(result.selector==7){
+        //进入/离开聊天界面
+      }
+   }
+}
+function callbackWebwxsync(data){
+  var result=JSON.parse(data);
+  if(result.BaseResponse.Ret==0){
+    console.log("获取最新消息成功...");
+    return data;
+  }else{
+    console.log("获取最新消息失败...");
+  }
+}
+
+function webwxsendmsg(data){
+  var result=JSON.parse(data);
+  if(result.BaseResponse.Ret==0){
+    console.log("消息发送成功...");
+  }else{
+    console.log("消息发送失败...");
+  }
+}
+//获取联系人
+function getContact(){
+  options.hostname="wx.qq.com";
+  options.path='/cgi-bin/mmwebwx-bin/webwxstatusnotify';
+  options.method='POST';
+  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length,
+  'Cookie': wxConfig.cookie};
+  requestHttps(callbackContact);
+}
+
+//消息检查
+function syncCheck(){
+  options.hostname="webpush2.weixin.qq.com";
+  options.path='/cgi-bin/mmwebwx-bin/synccheck';
+  options.method='GET';
+  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length};
+  requestHttps(callbackSyncCheck);
+}
+
+//获取最新消息
+function webwxsync(){
+  options.hostname="wx.qq.com";
+  options.path='/cgi-bin/mmwebwx-bin/webwxinit?sid='+wxConfig.wxsid+'&pass_ticket='+wxConfig.pass_ticket+'&skey='+wxConfig.skey;
+  options.method='POST';
+  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  var requestData={
+    Uin:wxConfig.wxuin,
+    Sid:wxConfig.wxsid,
+    Skey:wxConfig.skey,
+    DeviceID:id
+  };
+  var data={BaseRequest : requestData,SyncKey:syncKey,rr:new Date().getTime()};
+  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':JSON.stringify(data).length};
+  requestHttps(callbackWebwxsync);
+}
+//发送消息
+function webwxsendmsg(msg){
+  options.hostname="wx.qq.com";
+  options.path='/cgi-bin/mmwebwx-bin/webwxsendmsg?pass_ticket='+wxConfig.pass_ticket;
+  options.method='POST';
+  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  var requestData={
+    Uin:wxConfig.wxuin,
+    Sid:wxConfig.wxsid,
+    Skey:wxConfig.skey,
+    DeviceID:id
+  };
+  var data={BaseRequest : requestData,Msg:msg};
+  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':JSON.stringify(data).length};
+  requestHttps(webwxsendmsg);
+}
+
+function sendTextMessage(content,from,to){
+  var id=(new Date().getTime()+'').substring(0,4)+(Math.random().toFixed(4)+'').substring(2,6);
+  var msg={Type:1,
+      Content:content,
+      FromUserName: from,
+      ToUserName : to,
+      LocalID: id,
+      ClientMsgId: id
+    };
+    console.log('发送文字消息：'+content);
+  webwxsendmsg(msg);
+}
+
+//登陆以及微信初始化
+exports.getUUID = function(){
+  //发起请求
+  requestHttps(callbackQrCode);
 }
