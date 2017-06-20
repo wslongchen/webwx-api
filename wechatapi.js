@@ -114,7 +114,6 @@ function callbackLogin(data){
        //确认登录
         var base_uri=data.match(/\"(\S*)\"/)[1];
         login(base_uri);
-        console.log("base_uri"+base_uri);
         console.log("确认成功，进行登录");
         job.cancel();
       }else if(code == 201){
@@ -184,7 +183,7 @@ function wxInit(){
 //开启微信状态通知
 function wxStatusNotify(){
   options.hostname="wx.qq.com";
-  options.path='/cgi-bin/mmwebwx-bin/webwxstatusnotify';
+  options.path='/cgi-bin/mmwebwx-bin/webwxstatusnotify?lang=zh_CN&pass_ticket='+wxConfig.pass_ticket;
   options.method='POST';
   var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   var requestData={
@@ -193,8 +192,10 @@ function wxStatusNotify(){
     Skey:wxConfig.skey,
     DeviceID:id
   };
-  var data={BaseRequest : requestData,Code:3,FromUserName:user.UserName};
-  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':JSON.stringify(data).length};
+  var clientMsgId=(new Date().getTime()+'').substring(0,4)+(Math.random().toFixed(4)+'').substring(2,6);
+  var data={BaseRequest : requestData,Code:3,FromUserName:user.UserName,ToUserName:user.UserName,ClientMsgId:clientMsgId};
+  params=JSON.stringify(data);
+  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length};
   requestHttps(callbackStatusNotify);
 }
 
@@ -287,7 +288,7 @@ function webwxsync(){
 //发送消息
 function webwxsendmsg(msg){
   options.hostname="wx.qq.com";
-  options.path='/cgi-bin/mmwebwx-bin/webwxsendmsg?pass_ticket='+wxConfig.pass_ticket;
+  options.path='/cgi-bin/mmwebwx-bin/webwxsendmsg?lang=zh_CN&pass_ticket='+wxConfig.pass_ticket;
   options.method='POST';
   var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   var requestData={
@@ -296,8 +297,9 @@ function webwxsendmsg(msg){
     Skey:wxConfig.skey,
     DeviceID:id
   };
-  var data={BaseRequest : requestData,Msg:msg};
-  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':JSON.stringify(data).length};
+  var data={BaseRequest : requestData,Msg:msg,Scene:0};
+  params=JSON.stringify(data);
+  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length};
   requestHttps(webwxsendmsg);
 }
 
