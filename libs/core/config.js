@@ -19,8 +19,22 @@ exports.wxPath = {
 	webWxSync : '/cgi-bin/mmwebwx-bin/webwxinit',
 	webWxSendMsg : '/cgi-bin/mmwebwx-bin/webwxsendmsg'
 };
-exports.wxCookie={};
-exports.options={};
+exports.wxCookie;
+exports.options={
+	hostname : '',
+	port : '443',
+	path : '',
+	method : 'GET',
+	rejectUnauthorized: false,
+    requestCert: true,
+    headers : {
+    }
+
+};
 exports.data={};
+exports.uuid;
+exports.tips;
+exports.params="";
 exports.user={};
 exports.syncKey={};
+exports.isDebug =true;
