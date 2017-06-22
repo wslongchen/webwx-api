@@ -4,108 +4,16 @@ var http = require('https');
 var fs = require('fs');
 var request = require('request');
 var qs = require('querystring');
+var config = require('./libs/core/config');
 var schedule = require('node-schedule');
 var xmlreader = require("xmlreader"); 
 var job;
-var params="";
-var user ={};
-var syncKey={};
-var wxConfig= {
-  skey : '',
-  wxsid : '',
-  wxuin : '',
-  pass_ticket : '' ,
-  cookie: ''
-};
-
-//这是需要提交的数据  
-  
-
-var uid="";
-var tips=0;
-
-
-
-
-
-
-var baseRequest;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function callbackSyncCheck(data){
-   var check=data.match(/syncheck=(\S*)/)[1];
-   var result=JSON.parse(check);
-   if(result.retcode!=0){
-      console.log("失败/退出微信...");
-   }else{
-      if(result.selector==0){
-        //正常
-      }else if(result.selector==2){
-        //新消息
-      }else if(result.selector==7){
-        //进入/离开聊天界面
-      }
-   }
-}
-function callbackWebwxsync(data){
-  var result=JSON.parse(data);
-  if(result.BaseResponse.Ret==0){
-    console.log("获取最新消息成功...");
-    return data;
-  }else{
-    console.log("获取最新消息失败...");
-  }
-}
-
-
-
-
-//消息检查
-function syncCheck(){
-  options.hostname="webpush2.weixin.qq.com";
-  options.path='/cgi-bin/mmwebwx-bin/synccheck';
-  options.method='GET';
-  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':params.length};
-  requestHttps(callbackSyncCheck);
-}
-
-//获取最新消息
-function webwxsync(){
-  options.hostname="wx.qq.com";
-  options.path='/cgi-bin/mmwebwx-bin/webwxinit?sid='+wxConfig.wxsid+'&pass_ticket='+wxConfig.pass_ticket+'&skey='+wxConfig.skey;
-  options.method='POST';
-  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
-  var requestData={
-    Uin:wxConfig.wxuin,
-    Sid:wxConfig.wxsid,
-    Skey:wxConfig.skey,
-    DeviceID:id
-  };
-  var data={BaseRequest : requestData,SyncKey:syncKey,rr:new Date().getTime()};
-  options.headers = {'Content-Type': 'application/json;charset=utf-8','Content-Length':JSON.stringify(data).length};
-  requestHttps(callbackWebwxsync);
-}
-
+var wechatapi={};
 /*微信封装方法*/
 
 //登陆以及微信初始化
 
-function getUUId(){
+function getUId(){
   config.data = {  
     appid : 'wx782c26e4c19acffb',  
     fun : 'new',
@@ -255,16 +163,45 @@ function getContact(){
   requestHttps(callbackContact);
 }
 
-
-exports.getUUID = function(){
-  getUUId();
+//消息检查
+function syncCheck(){
+  config.options.hostname=config.wxHost.check_host;
+  config.options.path=config.wxPath.syncCheck;
+  config.options.method='GET';
+  config.params="";
+  config.options.headers = {
+    'Content-Type' : 'application/json;charset=utf-8',
+    'Content-Length':config.params.length};
+  requestHttps(callbackSyncCheck);
 }
 
-
+//获取最新消息
+function webwxsync(){
+  config.options.hostname=config.wxHost.main_host;
+  config.options.path=config.wxPath.webWxSync+'?sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
+  config.options.method='POST';
+  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : id
+      },
+      SyncKey : config.syncKey,
+      rr : new Date().getTime()
+  };
+  config.params = JSON.stringify(data);
+  config.options.headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length
+  };
+  requestHttps(callbackWebwxsync);
+}
 
 /*基本网络请求*/
 function requestHttps(callback){
-  var req = http.request(options, function (res) {   
+  var req = http.request(config.options, function (res) {   
     res.setEncoding('utf8');
     var headers=res.headers;
     var responseString = '';
@@ -274,12 +211,17 @@ function requestHttps(callback){
         responseString += chunk;
     });  
     res.on('end', function() {
+      if(config.isDebug){
+        console.log('response body: ' + responseString);
+      }
       callback(responseString,cookie);
     });
   });  
   
   req.on('error', function (e) {  
-      console.log('problem with request: ' + e.message);  
+      if(config.isDebug){
+        console.log('problem with request: ' + e.message);
+      }  
   });  
   
   req.write(config.params+"\n");
@@ -414,6 +356,39 @@ function callbackContact(data){
   }
 }
 
+//检查消息回调
+function callbackSyncCheck(data){
+   var check=data.match(/syncheck=(\S*)/)[1];
+   var result=JSON.parse(check);
+   if(result.retcode!=0){
+      if(config.isDebug){
+        console.log("失败/退出微信...");
+      }
+   }else{
+      if(result.selector==0){
+        //正常
+      }else if(result.selector==2){
+        //新消息
+      }else if(result.selector==7){
+        //进入/离开聊天界面
+      }
+   }
+}
+
+//同步消息回调
+function callbackWebwxsync(data){
+  var result=JSON.parse(data);
+  if(result.BaseResponse.Ret==0){
+    if(config.isDebug){
+      console.log("获取最新消息成功...");
+    }
+  }else{
+    if(config.isDebug){
+      console.log("获取最新消息失败...");
+    }
+  }
+}
+
 /*其它方法*/
 
 //下载图片
@@ -431,3 +406,40 @@ function getUrlParam(url,name){
   }
   return strValue;
 }
+
+/*公共属性*/
+wechatapi.MsgType={
+  1 : '文本消息',
+  3 : '图片消息',
+  34 : '语音消息',
+  37 : '好友确认消息',
+  40 : 'POSSIBLEFRIEND_MSG',
+  42 : '共享名片',
+  43 : '视频消息',
+  47 : '动画表情',
+  48 : '位置消息',
+  49 : '分享链接',
+  50 : 'VOIPMSG',
+  51 : '微信初始化消息',
+  52 : 'VOIPNOTIFY',
+  53 : 'VOIPINVITE',
+  62 : '小视频',
+  9999 : 'SYSNOTICE',
+  10000 : '系统消息',
+  10002 : '撤回消息'
+};
+
+
+
+wechatapi.getUUID=function(){
+  //getUId();
+  console.log(wechatapi.MsgType['1']);
+  console.log('11');
+  console.log('11');
+  console.log('11');
+}
+
+module.exports = wechatapi;
+
+
+

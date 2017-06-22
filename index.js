@@ -4,3 +4,4 @@ var mailer = require("./libs/core/mail");
 var wechatapi = require('./wechatapi');
 
 wechatapi.getUUID();
+console.log(wechatapi.MsgType['1']);
