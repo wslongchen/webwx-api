@@ -7,6 +7,7 @@ exports.wxConfig = {
 exports.wxHost = {
 	login_host : 'login.weixin.qq.com',
 	main_host : 'wx.qq.com',
+	main_host2 : 'wx2.qq.com',
 	check_host : 'webpush.weixin.qq.com'
 };
 exports.wxPath = {
@@ -17,7 +18,7 @@ exports.wxPath = {
 	getContact : '/cgi-bin/mmwebwx-bin/webwxstatusnotify',
 	getGroupContact : '/cgi-bin/mmwebwx-bin/webwxbatchgetcontact',
 	syncCheck : '/cgi-bin/mmwebwx-bin/synccheck',
-	webWxSync : '/cgi-bin/mmwebwx-bin/webwxinit',
+	webWxSync : '/cgi-bin/mmwebwx-bin/webwxsync',
 	webWxSendMsg : '/cgi-bin/mmwebwx-bin/webwxsendmsg'
 };
 exports.wxCookie;

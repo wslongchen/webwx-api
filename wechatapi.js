@@ -233,10 +233,18 @@ wechatapi.syncCheck = function(callback){
 
 //获取最新消息
 wechatapi.webwxsync = function(callback){
-  config.options.hostname=config.wxHost.main_host;
+  config.options.hostname=config.wxHost.main_host2;
   config.options.path=config.wxPath.webWxSync+'?sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
   config.options.method='POST';
   var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  var key ="";
+  var keys=config.syncKey.List;
+  for(var o in keys){
+    key = key +'|'+keys[o].Key+'_'+keys[o].Val;
+  }
+  if(key.length>1){
+    key = key.substr(1,key.length);
+  }
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
@@ -244,7 +252,7 @@ wechatapi.webwxsync = function(callback){
         Skey : config.wxConfig.skey,
         DeviceID : id
       },
-      SyncKey : config.syncKey,
+      SyncKey : key,
       rr : new Date().getTime()
   };
   config.params = JSON.stringify(config.data);

@@ -5,8 +5,25 @@ var wechatapi = require('./wechatapi');
 var config = require('./libs/core/config');
 var schedule = require('node-schedule');
 
-wechatapi.getUUID();
-test();
+//wechatapi.getUUID();
+//test();
+
+ss();
+function ss(){
+	tt(1);
+}
+function tt(id){
+	if(id==1){
+
+		uu(id);
+	}
+}
+
+function uu(id){
+	console.log(id);
+	setTimeout(ss,3000);
+}
+
 
 var time1=setInterval(test,1000);
 function test(){
@@ -30,10 +47,6 @@ function test(){
 }
 
 function listen(){
-	synccheck();
-}
-
-function synccheck(){
 	wechatapi.syncCheck(function(data){
 		var check=data.match(/synccheck=(\S*)/)[1];
 		var result=eval("("+check+")");
@@ -45,17 +58,22 @@ function synccheck(){
 		    	console.log("失败/登出微信...");
 		    }
 		}
-		setTimeout(listen,1000);
+		
 	});
 }
  
 
 function handle(selector){
+	console.log('新消息...');
+	console.log('新消息...');
+	console.log('新消息...');
+	console.log('新消息...');
 	if(selector==2){
 		//新消息
 		console.log('新消息...');
 		wechatapi.webwxsync(function(data){
-			var result=JSON.parse(check);
+			console.log('监听：'+data);
+			var result=JSON.parse(data);
 			handle_msg(result);
 		});
 		
@@ -66,7 +84,6 @@ function handle(selector){
 		});
 	}else if(selector==0){
 		//正常
-		
 	}else if(selector==4){
 		// 保存群聊到通讯录
         // 修改群名称
@@ -78,6 +95,7 @@ function handle(selector){
 		});
         
 	}
+	setTimeout(listen,3000);
 }
 
 function handle_msg(result){
