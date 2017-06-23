@@ -24,6 +24,7 @@
     "nodemailer" : "latest",
     "request" : "latest",
     "node-schedule" : "latest",
-    "xmlreader" : "latest"
+    "xmlreader" : "latest",
+    "qrcode-terminal" : "latest"
   }
 }

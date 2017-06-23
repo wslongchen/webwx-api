@@ -7,13 +7,15 @@ var qs = require('querystring');
 var config = require('./libs/core/config');
 var schedule = require('node-schedule');
 var xmlreader = require("xmlreader"); 
+var qrcode = require('qrcode-terminal');
 var job;
 var wechatapi={};
+
 /*微信封装方法*/
 
 //登陆以及微信初始化
 
-function getUId(){
+wechatapi.getUUID= function (){
   config.data = {  
     appid : 'wx782c26e4c19acffb',  
     fun : 'new',
@@ -26,28 +28,28 @@ function getUId(){
 }
 
 //实时监听登录情况,每5秒执行一次
-function waitForLoginSchedule(){
+wechatapi.waitForLoginSchedule=function (){
   var rule1     = new schedule.RecurrenceRule();  
   var times1    = [1,6,11,16,21,26,31,36,41,46,51,56];  
   rule1.second  = times1; 
   job=schedule.scheduleJob(rule1, function(){
-      waitForLogin();   
+      wechatapi.waitForLogin(); 
   }); 
 }
 
 //等待登录
-function waitForLogin(){
+wechatapi.waitForLogin = function (){
   config.tips=1;
   config.data = { 
     tip : config.tips,
-    uuid : config.uid
+    uuid : config.uuid
   };
-  config.options.path=config.wxPath.waitForLogin + qs.stringify(config.data);
+  config.options.path=config.wxPath.waitForLogin+'?' + qs.stringify(config.data);
   requestHttps(callbackLogin);
 }
 
 //请求登录
-function login(url){
+wechatapi.login = function (url){
   var host=url.match(/\/\/(\S*)\/cgi-bin/)[1];
   var p=url.match(/com(\S*)/)[1];
   config.options.hostname=host;
@@ -56,7 +58,7 @@ function login(url){
 }
 
 //微信初始化
-function wxInit(){
+wechatapi.wxInit = function (){
   if(config.isDebug){
     console.log("微信初始化...");
   }
@@ -83,7 +85,7 @@ function wxInit(){
 }
 
 //开启微信状态通知
-function wxStatusNotify(){
+wechatapi.wxStatusNotify = function(callback){
   config.options.hostname=config.wxHost.main_host;
   config.options.path=config.wxPath.wxStatusNotify + '?lang=zh_CN&pass_ticket='+config.wxConfig.pass_ticket;
   config.options.method='POST';
@@ -107,7 +109,7 @@ function wxStatusNotify(){
     'Content-Type': 'application/json;charset=utf-8',
     'Content-Length':config.params.length
   };
-  requestHttps(callbackStatusNotify);
+  requestHttps(callback);
 }
 
 //发送消息
@@ -134,7 +136,7 @@ function webwxsendmsg(msg){
 }
 
 //发送文字消息
-function sendTextMessage(content,from,to){
+wechatapi.sendTextMessage = function (content,from,to){
   var id=(new Date().getTime()+'').substring(0,4)+(Math.random().toFixed(4)+'').substring(2,6);
   var msg={
       Type : 1,
@@ -151,10 +153,43 @@ function sendTextMessage(content,from,to){
 }
 
 //获取联系人
-function getContact(){
+wechatapi.getContact = function(){
   config.options.hostname=config.wxHost.main_host;
-  config.options.path= config.wxPath.wxStatusNotify;
+  config.options.path= config.wxPath.getContact;
   config.options.method='POST';
+  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : id
+      }
+  };
+
+  config.params=JSON.stringify(config.data);
+  config.options.headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length,
+    'Cookie': config.wxCookie
+  };
+  requestHttps(callbackContact);
+}
+
+//获取群列表
+wechatapi.getGroupList = function(){
+  config.options.hostname=config.wxHost.main_host;
+  config.options.path= config.wxPath.getGroupContact;
+  config.options.method='POST';
+  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : id
+      }
+  };
   config.options.headers = {
     'Content-Type': 'application/json;charset=utf-8',
     'Content-Length':config.params.length,
@@ -164,19 +199,40 @@ function getContact(){
 }
 
 //消息检查
-function syncCheck(){
+wechatapi.syncCheck = function(callback){
   config.options.hostname=config.wxHost.check_host;
-  config.options.path=config.wxPath.syncCheck;
+  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  var key ="";
+  var keys=config.syncKey.List;
+  for(var o in keys){
+    key = key +'|'+keys[o].Key+'_'+keys[o].Val;
+  }
+  if(key.length>1){
+    key = key.substr(1,key.length);
+  }
+  config.data= {
+    uin : config.wxConfig.wxuin,
+    sid : config.wxConfig.wxsid,
+    skey : config.wxConfig.skey,
+    synckey : key,
+    deviceid : id,
+    _ : new Date().getTime(),
+    r : new Date().getTime()
+  };
+  config.options.path=config.wxPath.syncCheck+'?r='+ new Date().getTime()+'&uin='+config.wxConfig.wxuin +'&sid='
+  +config.wxConfig.wxsid +'&skey='+config.wxConfig.skey +'&deviceid='+id +'&_='+new Date().getTime()+'&synckey='+key;
   config.options.method='GET';
-  config.params="";
+  config.params=JSON.stringify(config.data);
   config.options.headers = {
-    'Content-Type' : 'application/json;charset=utf-8',
-    'Content-Length':config.params.length};
-  requestHttps(callbackSyncCheck);
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length,
+    'Cookie': config.wxCookie
+  };
+  requestHttps(callback);
 }
 
 //获取最新消息
-function webwxsync(){
+wechatapi.webwxsync = function(callback){
   config.options.hostname=config.wxHost.main_host;
   config.options.path=config.wxPath.webWxSync+'?sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
   config.options.method='POST';
@@ -191,12 +247,12 @@ function webwxsync(){
       SyncKey : config.syncKey,
       rr : new Date().getTime()
   };
-  config.params = JSON.stringify(data);
+  config.params = JSON.stringify(config.data);
   config.options.headers = {
     'Content-Type': 'application/json;charset=utf-8',
     'Content-Length':config.params.length
   };
-  requestHttps(callbackWebwxsync);
+  requestHttps(callback);
 }
 
 /*基本网络请求*/
@@ -233,6 +289,7 @@ function requestHttps(callback){
 
 //获取验证码回调
 function callbackQrCode(data){
+  config.resbonseData = data;
   var uuid=data.match(/\"(\S*)\"/)[1];
   if(uuid!=undefined){
     config.uuid=uuid;
@@ -243,14 +300,26 @@ function callbackQrCode(data){
 //登录二维码
 function showQrCode(uuid){
   //下载验证码
-  downloadPicture('https://login.weixin.qq.com/qrcode/'+uuid,'qrcode');
-  if(config.isDebug){
-    console.log("二维码下载完成..");
+  if(wechatapi.qrCodeType == 'png'){
+    downloadPicture('https://login.weixin.qq.com/qrcode/'+uuid,'qrcode');
+    if(config.isDebug){
+        console.log("二维码下载完成，请扫描...");
+    }
+    wechatapi.waitForLoginSchedule();
+  }else if(wechatapi.qrCodeType == 'cmd'){
+    showCommandLineQRCode('https://login.weixin.qq.com/l/'+uuid);
+    if(config.isDebug){
+      console.log("二维码显示成功，请扫描...");
+    }
+    wechatapi.waitForLoginSchedule();
   }
+  
+  
 }
 
 //扫描登录回调
 function callbackLogin(data){
+  config.resbonseData = data;
   var code=data.match(/code=(\S*);/)[1];
   if(code!=undefined){
     //等待登录
@@ -258,7 +327,7 @@ function callbackLogin(data){
     if(code==200){
        //确认登录
         var base_uri=data.match(/\"(\S*)\"/)[1];
-        login(base_uri);
+        wechatapi.login(base_uri);
         if(config.isDebug){
           console.log("确认成功，进行登录");
         }
@@ -283,6 +352,7 @@ function callbackLogin(data){
 
 //微信登录cookie回调
 function callbackCookie(data,cookie){
+  config.resbonseData = data;
   config.wxCookie = cookie;
   xmlreader.read(data, function(errors, response){  
     if(null !== errors ){  
@@ -295,11 +365,13 @@ function callbackCookie(data,cookie){
     config.wxConfig.wxsid=response.error.wxsid.text();
     config.wxConfig.wxuin=response.error.wxuin.text();
     config.wxConfig.pass_ticket= response.error.pass_ticket.text();
+    wechatapi.wxInit();
   });  
 }
 
 //初始化回调
 function callbackInit(data){
+  config.resbonseData = data;
   var result=JSON.parse(data);
   if(result.BaseResponse.Ret==0){
     if(config.isDebug){
@@ -307,15 +379,18 @@ function callbackInit(data){
     }
     config.user=result.User;
     config.syncKey=result.SyncKey;
+    config.retFlag=true;
   }else{
     if(config.isDebug){
       console.log("初始化微信失败...");
     }
+    config.retFlag=false;
   }
 }
 
 //开启微信通知回调
 function callbackStatusNotify(data){
+  config.resbonseData = data;
   var result=JSON.parse(data);
   if(result.BaseResponse.Ret==0){
     if(config.isDebug){
@@ -330,6 +405,7 @@ function callbackStatusNotify(data){
 
 //微信发送消息回调
 function callbackWebwxsendmsg(data){
+  config.resbonseData = data;
   var result=JSON.parse(data);
   if(result.BaseResponse.Ret==0){
     if(config.isDebug){
@@ -344,11 +420,13 @@ function callbackWebwxsendmsg(data){
 
 //获取联系人回调
 function callbackContact(data){
+  config.resbonseData = data;
   var result=JSON.parse(data);
   if(result.BaseResponse.Ret==0){
     if(config.isDebug){
       console.log("获取联系人列表成功...");
     }
+    config.contact = result;
   }else{
     if(config.isDebug){
       console.log("获取联系人列表失败...");
@@ -358,6 +436,7 @@ function callbackContact(data){
 
 //检查消息回调
 function callbackSyncCheck(data){
+   config.resbonseData = data;
    var check=data.match(/syncheck=(\S*)/)[1];
    var result=JSON.parse(check);
    if(result.retcode!=0){
@@ -377,6 +456,7 @@ function callbackSyncCheck(data){
 
 //同步消息回调
 function callbackWebwxsync(data){
+  config.resbonseData = data;
   var result=JSON.parse(data);
   if(result.BaseResponse.Ret==0){
     if(config.isDebug){
@@ -394,6 +474,13 @@ function callbackWebwxsync(data){
 //下载图片
 function downloadPicture(url,filename){
   request(url).pipe(fs.createWriteStream(filename+'.png'));
+}
+
+//显示命令行二维码
+function showCommandLineQRCode(str){
+  qrcode.generate(str, function (qrcode) {
+    console.log(qrcode);
+  });
 }
 
 //获取地址根据参数
@@ -429,15 +516,34 @@ wechatapi.MsgType={
   10002 : '撤回消息'
 };
 
-
-
-wechatapi.getUUID=function(){
-  //getUId();
-  console.log(wechatapi.MsgType['1']);
-  console.log('11');
-  console.log('11');
-  console.log('11');
+wechatapi.getAccountType = function(username){
+   var str=username.substr(0,1).trim();
+   if(str=='@'){
+      var str2=username.substr(0,2).trim();
+      if(str2=='@@'){
+        return '群聊';
+      }else{
+        return '个人账号/公众号';  
+      }
+   }else{
+      var type=otherType[username];
+      if(type != undefined){
+        return type;
+      }else{
+        return '未知类型';
+      }
+   }
 }
+
+var otherType = {
+  filehelper : '文件助手',
+  newsapp : '腾讯新闻', 
+  weibo : '微博',
+  qqmail : 'QQ邮件', 
+  qqfriend :'QQ好友助手', 
+};
+
+wechatapi.qrCodeType = 'cmd';
 
 module.exports = wechatapi;
 
