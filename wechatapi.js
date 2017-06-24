@@ -153,9 +153,9 @@ wechatapi.sendTextMessage = function (content,from,to){
 }
 
 //获取联系人
-wechatapi.getContact = function(){
+wechatapi.getContact = function(callback){
   config.options.hostname=config.wxHost.main_host;
-  config.options.path= config.wxPath.getContact;
+  config.options.path= config.wxPath.getContact+'?r='+ new Date().getTime()+'&skey='+config.wxConfig.skey+'&pass_ticket='+config.wxConfig.pass_ticket;;
   config.options.method='POST';
   var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   config.data={
@@ -173,29 +173,40 @@ wechatapi.getContact = function(){
     'Content-Length':config.params.length,
     'Cookie': config.wxCookie
   };
-  requestHttps(callbackContact);
+  requestHttps(callback);
 }
 
 //获取群列表
-wechatapi.getGroupList = function(){
+wechatapi.getGroupList = function(groupIds,callback){
   config.options.hostname=config.wxHost.main_host;
-  config.options.path= config.wxPath.getGroupContact;
+  config.options.path= config.wxPath.getGroupContact+'?type=ex&r='+ new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket;
   config.options.method='POST';
   var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  var Lists=new Array();
+  for(var i=0;i<groupIds.length;i++){
+    var list = {
+      UserName : groupIds[i],
+      EncryChatRoomId : ''
+    };
+    Lists.push(list);
+  }
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
         Sid : config.wxConfig.wxsid,
         Skey : config.wxConfig.skey,
         DeviceID : id
-      }
+      },
+      Count : groupIds.length,
+      List : Lists
   };
+  config.params = JSON.stringify(config.data);
   config.options.headers = {
     'Content-Type': 'application/json;charset=utf-8',
     'Content-Length':config.params.length,
     'Cookie': config.wxCookie
   };
-  requestHttps(callbackContact);
+  requestHttps(callback);
 }
 
 //消息检查
@@ -233,18 +244,10 @@ wechatapi.syncCheck = function(callback){
 
 //获取最新消息
 wechatapi.webwxsync = function(callback){
-  config.options.hostname=config.wxHost.main_host2;
+  config.options.hostname=config.wxHost.main_host;
   config.options.path=config.wxPath.webWxSync+'?sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
   config.options.method='POST';
   var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
-  var key ="";
-  var keys=config.syncKey.List;
-  for(var o in keys){
-    key = key +'|'+keys[o].Key+'_'+keys[o].Val;
-  }
-  if(key.length>1){
-    key = key.substr(1,key.length);
-  }
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
@@ -252,13 +255,14 @@ wechatapi.webwxsync = function(callback){
         Skey : config.wxConfig.skey,
         DeviceID : id
       },
-      SyncKey : key,
+      SyncKey : config.syncKey,
       rr : new Date().getTime()
   };
   config.params = JSON.stringify(config.data);
   config.options.headers = {
     'Content-Type': 'application/json;charset=utf-8',
-    'Content-Length':config.params.length
+    'Content-Length':config.params.length,
+    'Cookie': config.wxCookie
   };
   requestHttps(callback);
 }
@@ -276,7 +280,7 @@ function requestHttps(callback){
     });  
     res.on('end', function() {
       if(config.isDebug){
-        console.log('response body: ' + responseString);
+        //console.log('response body: ' + responseString);
       }
       callback(responseString,cookie);
     });

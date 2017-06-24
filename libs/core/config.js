@@ -15,7 +15,7 @@ exports.wxPath = {
 	wxQrCode : 'https://login.weixin.qq.com/qrcode/',
 	waitForLogin : '/cgi-bin/mmwebwx-bin/login',
 	wxStatusNotify : '/cgi-bin/mmwebwx-bin/webwxstatusnotify',
-	getContact : '/cgi-bin/mmwebwx-bin/webwxstatusnotify',
+	getContact : '/cgi-bin/mmwebwx-bin/webwxgetcontact',
 	getGroupContact : '/cgi-bin/mmwebwx-bin/webwxbatchgetcontact',
 	syncCheck : '/cgi-bin/mmwebwx-bin/synccheck',
 	webWxSync : '/cgi-bin/mmwebwx-bin/webwxsync',
