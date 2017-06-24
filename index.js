@@ -22,8 +22,6 @@ var SPECIALUSER = ["newsapp", "filehelper", "weibo", "qqmail",
             "gh_22b87fa7cb3c", "userexperience_alarm"];
 
 wechatapi.getUUID();
-
-
 var time1=setInterval(test,1000);
 function test(){
 	if(config.retFlag){
@@ -83,7 +81,7 @@ function getContact(){
 		      console.log("获取联系人列表失败...");
 		    }
 		 }
-		 //listen();
+		 listen();
 	});
 	
 }
@@ -167,18 +165,23 @@ function handle_msg(result){
 		}else if(msgType == 10002){
 			//撤回消息
 		}
-		console.log('收到消息：'+content);
 		if(wechatapi.getAccountType(fromUserName) == '群聊'){
+			var username =content.match(/(\S*):/)[1];
+			var user = getUserInfoGroup(fromUserName,username);
 			if(msgType == 1){
-				
 				var msg=content.match(/<br\/>(\S*);/)[1];
-				
+				if(config.isDebug){
+					console.log('收到群消息['+user.NickName+']:'+msg);
+				}
 				if(msg.substr(0,1).trim()=='@'){
-
+					console.log("@的消息"+content);
 				}
 			}
 		}else{
-
+			var user =getUserInfo(fromUserName);
+			if(config.isDebug){
+				console.log('收到个人消息['+user.NickName+']:'+msg);
+			}
 		}
 	}
 
@@ -204,4 +207,36 @@ function fetchGroupContacts(groupIds){
 	  		}
 	  	}
 	});
+}
+
+//获取用户信息
+function getUserInfo(name){
+	if(name == config.user.UserName){
+		return config.user;
+	}
+
+	for(var i=0;i<MemberList.length;i++){
+		var member = MemberList[i];
+		if(member.UserName == name){
+			return member;
+		}
+	}
+}
+
+function getUserInfoGroup(groupId,name){
+	if(name == config.user.UserName){
+		return config.user;
+	}
+	var user=groupUsers[groupId];
+	if(user!=undefined){
+		for(var i=0;i<user.MemberList.length;i++){
+		var member = user.MemberList[i];
+		console.log(member);
+		if(member.UserName == name){
+			return member;
+		}
+	}
+
+	}
+	
 }
