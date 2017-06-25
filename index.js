@@ -23,6 +23,7 @@ var SPECIALUSER = ["newsapp", "filehelper", "weibo", "qqmail",
 
 wechatapi.getUUID();
 var time1=setInterval(test,1000);
+
 function test(){
 	if(config.retFlag){
 			wechatapi.wxStatusNotify(function(data){
@@ -87,36 +88,27 @@ function getContact(){
 }
 
 function listen(){
-	if(flag){
-		flag=false;
-		count =1;
-		synccheck();
-	}
+	syncCheck();
 }
 
-var flag=true;
 var count=1;
- 
-function synccheck(){
-	if(!flag){
-		wechatapi.syncCheck(function(data){
-			console.log('data:'+data);
+
+
+function syncCheck(){
+	wechatapi.syncCheck(function(data){
 			var check=data.match(/synccheck=(\S*)/)[1];
 			var result=eval("("+check+")");
 			var retCode =result.retcode;
 			if(retCode==0){
 				handle(result.selector);
-				flag=true;
 			}else if(retCode =='1101'){
 				if(config.isDebug){
 			    	console.log("微信登出...");
 			    }
-			    flag=false;
 			}else if(retCode =='1102'){
 				if(config.isDebug){
 			    	console.log("手机端微信登出...");
 			    }
-			    flag=false;
 			}else{
 				count++;
 				if(config.isDebug){
@@ -127,13 +119,10 @@ function synccheck(){
 			    if(count==6){
 			    	count =1;
 			    }
-			    synccheck();
+			    listen();
 			    
 			}
 		});
-	}else{
-
-	}
 }
 
 function handle(selector){
@@ -169,8 +158,14 @@ function handle(selector){
 }
 
 function handle_msg(result){
+	if(result.BaseResponse.Ret!=0){
+		setTimeout(syncCheck,5000);
+		return;
+	}
+	config.syncKey = result.SyncKey;
 	var msgListCount = result.AddMsgList.length;
 	if(msgListCount==0){
+		setTimeout(syncCheck,5000);
 		return;
 	}
 
@@ -203,28 +198,60 @@ function handle_msg(result){
 		}else{
 			continue;
 		}
-		console.log(result);
 		if(wechatapi.getAccountType(fromUserName) == '群聊'){
 			var username =content.match(/(\S*):/)[1];
 			var user = getUserInfoGroup(fromUserName,username);
+			var group = getGroupInfo(fromUserName);
 			if(msgType == 1){
-				var msg=content.match(/<br\/>(\S*);/)[1];
-				if(config.isDebug){
-					console.log('收到群消息['+user.NickName+']:'+msg);
-				}
+				var msg=content.match(/<br\/>(\S*)/)[1];
 				if(msg.substr(0,1).trim()=='@'){
-					console.log("@的消息"+content);
+					var infos=msg.split(' ');
+					if(infos.length>0){
+						if(infos[0].replace("@","").trim() == +config.user.NickName){
+							//@自己的消息
+							msg=content.replace(username+":<br/>","").replace('@'+user.NickName,"").trim();
+							if(msg.length>0 && config.isDebug){
+								console.log("@自己的消息["+group.NickName+"("+user.NickName+")]:"+msg);
+								wechatapi.sendTextMessage("@"+user.NickName+" 你港的我完全听不懂啊老铁！[尴尬]",config.user.UserName,fromUserName);
+							}else{
+								wechatapi.sendTextMessage("@"+user.NickName+" @我搞毛",config.user.UserName,fromUserName);
+							}
+							if(config.isDebug){
+								console.log("@了自己["+group.NickName+"("+user.NickName+")]");
+							}
+
+						}
+					}
+					
+				}else{
+					if(config.isDebug){
+						console.log('收到群消息['+user.NickName+']:'+msg);
+					}
 				}
 			}
 		}else{
 			var user =getUserInfo(fromUserName);
 			var msg =content;
+			if(user.UserName == config.user.UserName){
+				var to = getUserInfo(toUserName);
+				if(wechatapi.getAccountType(toUserName) == '群聊'){
+					var group = getGroupInfo(toUserName);
+					if(config.isDebug){
+						console.log('回复群消息['+group.NickName+']:'+msg);
+					}
+					continue;
+				}
+				if(config.isDebug){
+					console.log('回复个人消息['+to.NickName+']:'+msg);
+				}
+				continue;
+			}
 			if(config.isDebug){
 				console.log('收到个人消息['+user.NickName+']:'+msg);
 			}
 		}
 	}
-	setTimeout(listen,5000);
+	setTimeout(syncCheck,5000);
 }
 
 function handle_mod(result){
@@ -271,12 +298,19 @@ function getUserInfoGroup(groupId,name){
 	if(user!=undefined){
 		for(var i=0;i<user.MemberList.length;i++){
 		var member = user.MemberList[i];
-		console.log(member);
 		if(member.UserName == name){
 			return member;
 		}
 	}
 
+	}
+	
+}
+
+function getGroupInfo(groupId){
+	var group=groupUsers[groupId];
+	if(group!=undefined){
+		return group;
 	}
 	
 }

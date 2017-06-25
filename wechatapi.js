@@ -121,7 +121,7 @@ wechatapi.wxStatusNotify = function(callback){
 //发送消息
 function webwxsendmsg(msg){
   config.options.hostname=config.wxHost.main_host;
-  config.options.path=config.wxPath.webWxSendMsg + '?lang=zh_CN&sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
+  config.options.path=config.wxPath.webWxSendMsg + '?pass_ticket='+config.wxConfig.pass_ticket;
   config.options.method='POST';
   //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   config.data={
@@ -137,16 +137,19 @@ function webwxsendmsg(msg){
   config.options.headers = {
     'Content-Type': 'application/json;charset=utf-8',
     'Content-Length':config.params.length
-};
+  };
+  console.log(config.params);
+  console.log(config.options);
   requestHttps(callbackWebwxsendmsg);
 }
 
 //发送文字消息
 wechatapi.sendTextMessage = function (content,from,to){
   var id=(new Date().getTime()+'').substring(0,4)+(Math.random().toFixed(4)+'').substring(2,6);
+  var data ='wo yi da zhong wen jiu luan ma a ,lao tie';
   var msg={
       Type : 1,
-      Content : content,
+      Content : data,
       FromUserName : from,
       ToUserName : to,
       LocalID : id,
@@ -259,6 +262,7 @@ wechatapi.webwxsync = function(callback){
   config.options.path=config.wxPath.webWxSync+'?sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
   config.options.method='POST';
   //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  var rr=new Date().getTime();
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
@@ -267,7 +271,7 @@ wechatapi.webwxsync = function(callback){
         DeviceID : deviceID
       },
       SyncKey : config.syncKey,
-      rr : new Date().getTime()
+      rr : ~rr
   };
   config.params = JSON.stringify(config.data);
   config.options.headers = {
