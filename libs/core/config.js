@@ -8,7 +8,12 @@ exports.wxHost = {
 	login_host : 'login.weixin.qq.com',
 	main_host : 'wx.qq.com',
 	main_host2 : 'wx2.qq.com',
-	check_host : 'webpush.weixin.qq.com'
+	check_host : 'webpush.weixin.qq.com',
+	check_host2 : 'webpush.wx2.qq.com',
+	check_host3 : 'webpush.wx8.qq.com',
+	check_host4 : 'webpush.wx.qq.com',
+	check_host5 : 'webpush.web2.wechat.com',
+	check_host6 : 'webpush.web.wechat.com',
 };
 exports.wxPath = {
 	wxInit : '/cgi-bin/mmwebwx-bin/webwxinit',

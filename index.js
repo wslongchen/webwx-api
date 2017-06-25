@@ -87,21 +87,54 @@ function getContact(){
 }
 
 function listen(){
-	wechatapi.syncCheck(function(data){
-		var check=data.match(/synccheck=(\S*)/)[1];
-		var result=eval("("+check+")");
-		var retCode =result.retcode;
-		if(retCode==0){
-			handle(result.selector);
-		}else if(retCode == 1100){
-			if(config.isDebug){
-		    	console.log("失败/登出微信...");
-		    }
-		}
-		
-	});
+	if(flag){
+		flag=false;
+		count =1;
+		synccheck();
+	}
 }
+
+var flag=true;
+var count=1;
  
+function synccheck(){
+	if(!flag){
+		wechatapi.syncCheck(function(data){
+			console.log('data:'+data);
+			var check=data.match(/synccheck=(\S*)/)[1];
+			var result=eval("("+check+")");
+			var retCode =result.retcode;
+			if(retCode==0){
+				handle(result.selector);
+				flag=true;
+			}else if(retCode =='1101'){
+				if(config.isDebug){
+			    	console.log("微信登出...");
+			    }
+			    flag=false;
+			}else if(retCode =='1102'){
+				if(config.isDebug){
+			    	console.log("手机端微信登出...");
+			    }
+			    flag=false;
+			}else{
+				count++;
+				if(config.isDebug){
+			    	console.log("微信监听失败...切换线路"+count);
+			    }
+			    config.wxHost.check_host=config.wxHost['check_host'+count];
+			    console.log(config.wxHost.check_host);
+			    if(count==6){
+			    	count =1;
+			    }
+			    synccheck();
+			    
+			}
+		});
+	}else{
+
+	}
+}
 
 function handle(selector){
 	if(selector==2){
@@ -109,27 +142,30 @@ function handle(selector){
 		wechatapi.webwxsync(function(data){
 			var result=JSON.parse(data);
 			handle_msg(result);
+			
 		});
 		
 	}else if(selector==7){
 		//进入/离开聊天界面
 		wechatapi.webwxsync(function(data){
-			
+			setTimeout(listen,5000);
 		});
 	}else if(selector==0){
 		//正常
+		setTimeout(listen,5000);
 	}else if(selector==4){
 		// 保存群聊到通讯录
         // 修改群名称
         // 新增或删除联系人
         // 群聊成员数目变化
-       /* wechatapi.webwxsync(function(data){
+       wechatapi.webwxsync(function(data){
         	var result=JSON.parse(data);
-			handle_msg(result);
-		});*/
+        	setTimeout(listen,5000);
+			//handle_msg(result);
+		});
         
 	}
-	setTimeout(listen,5000);
+	
 }
 
 function handle_msg(result){
@@ -146,9 +182,9 @@ function handle_msg(result){
 		if(content.length>1){
 			content=content.replace('&lt','<').replace('&gt', '>');
 		}
-		if(content.trim().length==0){
+		/*if(content.trim().length==0){
 			return;
-		}
+		}*/
 		var fromUserName = AddMsgList[m].FromUserName;
 		var toUserName = AddMsgList[m].ToUserName;
 
@@ -164,7 +200,10 @@ function handle_msg(result){
 			//系统消息
 		}else if(msgType == 10002){
 			//撤回消息
+		}else{
+			continue;
 		}
+		console.log(result);
 		if(wechatapi.getAccountType(fromUserName) == '群聊'){
 			var username =content.match(/(\S*):/)[1];
 			var user = getUserInfoGroup(fromUserName,username);
@@ -179,12 +218,13 @@ function handle_msg(result){
 			}
 		}else{
 			var user =getUserInfo(fromUserName);
+			var msg =content;
 			if(config.isDebug){
 				console.log('收到个人消息['+user.NickName+']:'+msg);
 			}
 		}
 	}
-
+	setTimeout(listen,5000);
 }
 
 function handle_mod(result){

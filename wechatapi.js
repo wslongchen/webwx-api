@@ -14,6 +14,7 @@ var wechatapi={};
 /*微信封装方法*/
 
 //登陆以及微信初始化
+var deviceID="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
 
 wechatapi.getUUID= function (){
   config.data = {  
@@ -62,17 +63,22 @@ wechatapi.wxInit = function (){
   if(config.isDebug){
     console.log("微信初始化...");
   }
-  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  
   config.data={
       BaseRequest : {
         Uin:config.wxConfig.wxuin,
         Sid:config.wxConfig.wxsid,
         Skey:config.wxConfig.skey,
-        DeviceID:id
+        DeviceID:deviceID
       }
   };
   config.params=JSON.stringify(config.data);
 
+  /*if(host){
+    config.options.hostname= host;
+  }else{
+    config.options.hostname= config.wxHost.main_host;
+  }*/
   config.options.hostname= config.wxHost.main_host;
   config.options.path=config.wxPath.wxInit+'?r='+new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
   config.options.method='POST';
@@ -89,14 +95,14 @@ wechatapi.wxStatusNotify = function(callback){
   config.options.hostname=config.wxHost.main_host;
   config.options.path=config.wxPath.wxStatusNotify + '?lang=zh_CN&pass_ticket='+config.wxConfig.pass_ticket;
   config.options.method='POST';
-  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   var clientMsgId=(new Date().getTime()+'').substring(0,4)+(Math.random().toFixed(4)+'').substring(2,6);
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
         Sid : config.wxConfig.wxsid,
         Skey : config.wxConfig.skey,
-        DeviceID : id
+        DeviceID : deviceID
       },
       Code : 3,
       FromUserName : config.user.UserName,
@@ -117,13 +123,13 @@ function webwxsendmsg(msg){
   config.options.hostname=config.wxHost.main_host;
   config.options.path=config.wxPath.webWxSendMsg + '?lang=zh_CN&sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
   config.options.method='POST';
-  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
         Sid : config.wxConfig.wxsid,
         Skey : config.wxConfig.skey,
-        DeviceID : id
+        DeviceID : deviceID
       },
       Msg : msg
   };
@@ -157,13 +163,13 @@ wechatapi.getContact = function(callback){
   config.options.hostname=config.wxHost.main_host;
   config.options.path= config.wxPath.getContact+'?r='+ new Date().getTime()+'&skey='+config.wxConfig.skey+'&pass_ticket='+config.wxConfig.pass_ticket;;
   config.options.method='POST';
-  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
         Sid : config.wxConfig.wxsid,
         Skey : config.wxConfig.skey,
-        DeviceID : id
+        DeviceID : deviceID
       }
   };
 
@@ -181,7 +187,7 @@ wechatapi.getGroupList = function(groupIds,callback){
   config.options.hostname=config.wxHost.main_host;
   config.options.path= config.wxPath.getGroupContact+'?type=ex&r='+ new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket;
   config.options.method='POST';
-  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   var Lists=new Array();
   for(var i=0;i<groupIds.length;i++){
     var list = {
@@ -195,7 +201,7 @@ wechatapi.getGroupList = function(groupIds,callback){
         Uin : config.wxConfig.wxuin,
         Sid : config.wxConfig.wxsid,
         Skey : config.wxConfig.skey,
-        DeviceID : id
+        DeviceID : deviceID
       },
       Count : groupIds.length,
       List : Lists
@@ -211,8 +217,13 @@ wechatapi.getGroupList = function(groupIds,callback){
 
 //消息检查
 wechatapi.syncCheck = function(callback){
+  /*if(host){
+    config.options.hostname=host;
+  }else{
+    config.options.hostname=config.wxHost.check_host;
+  }*/
   config.options.hostname=config.wxHost.check_host;
-  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   var key ="";
   var keys=config.syncKey.List;
   for(var o in keys){
@@ -226,12 +237,12 @@ wechatapi.syncCheck = function(callback){
     sid : config.wxConfig.wxsid,
     skey : config.wxConfig.skey,
     synckey : key,
-    deviceid : id,
+    deviceid : deviceID,
     _ : new Date().getTime(),
     r : new Date().getTime()
   };
   config.options.path=config.wxPath.syncCheck+'?r='+ new Date().getTime()+'&uin='+config.wxConfig.wxuin +'&sid='
-  +config.wxConfig.wxsid +'&skey='+config.wxConfig.skey +'&deviceid='+id +'&_='+new Date().getTime()+'&synckey='+key;
+  +config.wxConfig.wxsid +'&skey='+config.wxConfig.skey +'&deviceid='+deviceID +'&_='+new Date().getTime()+'&synckey='+key;
   config.options.method='GET';
   config.params=JSON.stringify(config.data);
   config.options.headers = {
@@ -247,13 +258,13 @@ wechatapi.webwxsync = function(callback){
   config.options.hostname=config.wxHost.main_host;
   config.options.path=config.wxPath.webWxSync+'?sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
   config.options.method='POST';
-  var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
         Sid : config.wxConfig.wxsid,
         Skey : config.wxConfig.skey,
-        DeviceID : id
+        DeviceID : deviceID
       },
       SyncKey : config.syncKey,
       rr : new Date().getTime()
@@ -396,6 +407,8 @@ function callbackInit(data){
     if(config.isDebug){
       console.log("初始化微信失败...");
     }
+    config.wxHost.main_host ='wx2.qq.com';
+    wechatapi.wxInit();
     config.retFlag=false;
   }
 }
