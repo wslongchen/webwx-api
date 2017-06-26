@@ -10,10 +10,11 @@ var publicUsersList=new Array();
 var specialUsersList = new Array();
 var groupList =new Array();
 var groupUsers={};
+var time1;
 
 exports.start=function(){
 	wechatapi.getUUID();
-	var time1=setInterval(test,1000);
+	time1=setInterval(test,1000);
 }
 
 function test(){

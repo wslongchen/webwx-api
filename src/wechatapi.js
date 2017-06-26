@@ -138,8 +138,6 @@ function webwxsendmsg(msg){
     'Content-Type': 'application/json;charset=utf-8',
     'Content-Length':config.params.length
   };
-  console.log(config.params);
-  console.log(config.options);
   requestHttps(callbackWebwxsendmsg);
 }
 
@@ -149,7 +147,7 @@ wechatapi.sendTextMessage = function (content,from,to){
   var data ='wo yi da zhong wen jiu luan ma a ,lao tie';
   var msg={
       Type : 1,
-      Content : data,
+      Content : content,
       FromUserName : from,
       ToUserName : to,
       LocalID : id,
@@ -283,12 +281,12 @@ wechatapi.webwxsync = function(callback){
 }
 
 //创建聊天室
-wechatapi.createChatRoom = function(uid_arr,){
+wechatapi.createChatRoom = function(uid_arr,callback){
   config.options.hostname=config.wxHost.main_host;
   config.options.path=config.wxPath.createChatRoom+'?r='+ new Date().getTime();
   config.options.method='POST';
   var ids=new Array();
-  for(var id : uid_arr){
+  for(var id in uid_arr){
     ids.push({UserName:id});
   }
   config.data={
@@ -317,7 +315,7 @@ wechatapi.updateChatRoom = function(add_arr,del_arr,invite_arr){
   config.options.path=config.wxPath.updateChatRoom+'?r='+ new Date().getTime();
   config.options.method='POST';
   var ids=new Array();
-  for(var id : uid_arr){
+  for(var id in uid_arr){
     ids.push({UserName:id});
   }
   config.data={
