@@ -66,5 +66,5 @@ To setup the development envrionment run `npm install`
 [example-img]: https://github.com/wslongchen/webwechat_api/blob/master/screenshot.png
 [docs-image]: https://img.shields.io/badge/文档-中文-blue.svg
 [docs-url]: https://github.com/wslongchen/webwechat_api/blob/master/README_CN.md
-[npm-image]: https://img.shields.io/npm/v/express.svg
+[npm-image]: https://img.shields.io/npm/v/webwechat_api.svg
 [npm-url]: https://npmjs.org/package/webwechat_api
