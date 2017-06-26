@@ -14,11 +14,13 @@ and used:
 
 ## Usage
 To use api.mothodName to create your own WeChat robot.
-	wechatapi.getUUID(function (data){
-		//do something
-	});
+    
+    wechatapi.getUUID(function (data){
+        //do something
+    });
 
 Run wxbot.js, which contains the basic functions and cases.
+	
 	node wxbox.js
 
 More methods, contents, and method names can be viewed in wechatapi.js.
