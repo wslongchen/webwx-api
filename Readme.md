@@ -1,5 +1,6 @@
 [![Docs][docs-image]][docs-url]
 [![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
 
 > Something could help for you.
 
@@ -68,3 +69,5 @@ To setup the development envrionment run `npm install`
 [docs-url]: https://github.com/wslongchen/webwechat_api/blob/master/README_CN.md
 [npm-image]: https://img.shields.io/npm/v/webwechat_api.svg
 [npm-url]: https://npmjs.org/package/webwechat_api
+[downloads-image]: https://img.shields.io/npm/dm/webwechat_api.svg
+[downloads-url]: https://npmjs.org/package/webwechat_api
