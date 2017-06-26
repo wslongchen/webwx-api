@@ -1,5 +1,5 @@
 [![Docs](https://img.shields.io/badge/文档-中文-blue.svg)](https://github.com/wslongchen/webwechat_api/blob/master/README_CN.md)
-# webWechatApi By Node  
+
 # WeChat Redpack Helper
 
 > Something could help for you.
