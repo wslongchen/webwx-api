@@ -20,17 +20,19 @@ and used:
     var api = require('webwechat_api');
 
 ## Usage
-To use api.mothodName to create your own WeChat robot.
-    
-    wechatapi.getUUID(function (data){
-        //do something
-    });
++ To use api.mothodName to create your own WeChat robot.
 
-Run wxbot.js, which contains the basic functions and cases.
+      wechatapi.getUUID(function (data){
+           //do something
+       });
+
+
++ Run wxbot.js, which contains the basic functions and cases.
 	
-	node wxbox.js
+    node wxbox.js
 
-More methods, contents, and method names can be viewed in wechatapi.js.
+
++ More methods, contents, and method names can be viewed in wechatapi.js.
 
 # Updates
 
