@@ -1,6 +1,5 @@
-[![Docs](https://img.shields.io/badge/文档-中文-blue.svg)](https://github.com/wslongchen/webwechat_api/blob/master/README_CN.md)
-
-# WeChat Redpack Helper
+[![Docs][docs-image]][docs-url]
+[![NPM Version][npm-image]][npm-url]
 
 > Something could help for you.
 
@@ -65,4 +64,7 @@ To setup the development envrionment run `npm install`
 [qrcode-terminal]: https://github.com/gtanner/qrcode-terminal
 [biezhi]: https://github.com/biezhi/wechat-robot
 [example-img]: https://github.com/wslongchen/webwechat_api/blob/master/screenshot.png
-[readme-en]: https://github.com/wslongchen/webwechat_api/blob/master/README.md
+[docs-image]: https://img.shields.io/badge/文档-中文-blue.svg
+[docs-url]: https://github.com/wslongchen/webwechat_api/blob/master/README_CN.md
+[npm-image]: https://img.shields.io/npm/v/express.svg
+[npm-url]: https://npmjs.org/package/webwechat_api
