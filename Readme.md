@@ -1,7 +1,7 @@
 [![Docs][docs-image]][docs-url]
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
-
+[![Linux Build][travis-img]][travis-url]
 > Something could help for you.
 
 # Node Library
@@ -12,26 +12,29 @@
 ## Install
 
 Can be installed with:
-
+```bash
     $ npm install webwechat_api
-
+    $ npm link
+```
 and used:
-
+```js
     var api = require('webwechat_api');
-
+```
 ## Usage
 + To use api.mothodName to create your own WeChat robot.
-
+```js
       wechatapi.getUUID(function (data){
            //do something
        });
-
-
-+ Run wxbot.js, which contains the basic functions and cases.
-	
+```
++ Run wxbot.js or webwx test, which contains the basic functions and cases.And You can run webwx -h for help
+```bash	
     node wxbox.js
-
-
+```
+or
+```bash	
+    webwx test
+```
 + More methods, contents, and method names can be viewed in wechatapi.js.
 
 # Updates
@@ -71,3 +74,5 @@ To setup the development envrionment run `npm install`
 [npm-url]: https://npmjs.org/package/webwechat_api
 [downloads-image]: https://img.shields.io/npm/dm/webwechat_api.svg
 [downloads-url]: https://npmjs.org/package/webwechat_api
+[travis-img]: https://travis-ci.org/wslongchen/webwechat_api.svg?branch=master
+[travis-url]: https://travis-ci.org/wslongchen/webwechat_api
