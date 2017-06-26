@@ -282,6 +282,68 @@ wechatapi.webwxsync = function(callback){
   requestHttps(callback);
 }
 
+//创建聊天室
+wechatapi.createChatRoom = function(uid_arr,){
+  config.options.hostname=config.wxHost.main_host;
+  config.options.path=config.wxPath.createChatRoom+'?r='+ new Date().getTime();
+  config.options.method='POST';
+  var ids=new Array();
+  for(var id : uid_arr){
+    ids.push({UserName:id});
+  }
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : deviceID
+      },
+      Topic : '',
+      MemberCount : uid_arr.length,
+      MemberList : ids
+  };
+  config.params = JSON.stringify(config.data);
+  config.options.headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length,
+    'Cookie': config.wxCookie
+  };
+  requestHttps(callback);
+}
+
+//更新聊天室
+wechatapi.updateChatRoom = function(add_arr,del_arr,invite_arr){
+  config.options.hostname=config.wxHost.main_host;
+  config.options.path=config.wxPath.updateChatRoom+'?r='+ new Date().getTime();
+  config.options.method='POST';
+  var ids=new Array();
+  for(var id : uid_arr){
+    ids.push({UserName:id});
+  }
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : deviceID
+      },
+      NewTopic : '',
+      MemberCount : uid_arr.length,
+      ChatRoomName : '',
+      MemberList : ids,
+      AddMemberList : add_arr,
+      DelMemberList : del_arr,
+      InviteMemberList : invite_arr
+  };
+  config.params = JSON.stringify(config.data);
+  config.options.headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length,
+    'Cookie': config.wxCookie
+  };
+  requestHttps(callback);
+}
+
 /*基本网络请求*/
 function requestHttps(callback){
   var req = http.request(config.options, function (res) {   
@@ -544,6 +606,16 @@ wechatapi.MsgType={
   10000 : '系统消息',
   10002 : '撤回消息'
 };
+
+wechatapi.SPECIALUSER = ["newsapp", "filehelper", "weibo", "qqmail",
+            "fmessage", "tmessage", "qmessage", "qqsync",
+            "floatbottle", "lbsapp", "shakeapp", "medianote",
+            "qqfriend", "readerapp", "blogapp", "facebookapp",
+            "masssendapp", "meishiapp", "feedsapp", "voip",
+            "blogappweixin", "brandsessionholder", "weixin",
+            "weixinreminder", "officialaccounts", "wxitil",
+            "notification_messages", "wxid_novlwrv3lqwv11",
+            "gh_22b87fa7cb3c", "userexperience_alarm"];
 
 wechatapi.getAccountType = function(username){
    var str=username.substr(0,1).trim();

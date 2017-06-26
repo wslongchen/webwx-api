@@ -24,7 +24,9 @@ exports.wxPath = {
 	getGroupContact : '/cgi-bin/mmwebwx-bin/webwxbatchgetcontact',
 	syncCheck : '/cgi-bin/mmwebwx-bin/synccheck',
 	webWxSync : '/cgi-bin/mmwebwx-bin/webwxsync',
-	webWxSendMsg : '/cgi-bin/mmwebwx-bin/webwxsendmsg'
+	webWxSendMsg : '/cgi-bin/mmwebwx-bin/webwxsendmsg',
+	createChatRoom : '/cgi-bin/mmwebwx-bin/webwxcreatechatroom',
+	updateChatRoom : '/cgi-bin/mmwebwx-bin/webwxupdatechatroom'
 };
 exports.wxCookie;
 exports.options={
