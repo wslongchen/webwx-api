@@ -3,9 +3,9 @@
   "version": "1.0.4",
   "description": "web wechat helper",
   "main": "index.js",
-  "scripts": {
-    "test": "webwecat"
-  },
+  "bin":{
+    "webwx" : "./bin/webwx.js"
+    },
   "files" : [
     "libs",
     "*.js"
@@ -29,6 +29,7 @@
     "request" : "latest",
     "node-schedule" : "latest",
     "xmlreader" : "latest",
-    "qrcode-terminal" : "latest"
+    "qrcode-terminal" : "latest",
+    "commander" : "latest"
   }
 }
