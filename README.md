@@ -1,4 +1,6 @@
-# webWechatApi By Node 
+[![Docs](https://img.shields.io/badge/文档-中文-blue.svg)](readme-cn)
+# webWechatApi By Node  
+# WeChat Redpack Helper
 
 > Something could help for you.
 
@@ -30,6 +32,14 @@ Run wxbot.js, which contains the basic functions and cases.
 
 More methods, contents, and method names can be viewed in wechatapi.js.
 
+# Updates
+
+- Get information about contacts (public numbers, group chats)
+- Receive messages in real time (able to identify group @ messages)
+- Send text messages
+
+【1.0.2】 --17/06/26
+
 # Support
 
 - OS X
@@ -53,3 +63,4 @@ To setup the development envrionment run `npm install`
 [qrcode-terminal]: https://github.com/gtanner/qrcode-terminal
 [biezhi]: https://github.com/biezhi/wechat-robot
 [example-img]: https://github.com/wslongchen/webwechat_api/blob/master/screenshot.png
+[readme-en]: https://github.com/wslongchen/webwechat_api/blob/master/README.md
