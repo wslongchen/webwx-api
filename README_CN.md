@@ -1,4 +1,4 @@
-[![Docs](https://img.shields.io/badge/Docs-English-blue.svg)](readme-cn)
+[![Docs](https://img.shields.io/badge/Docs-English-blue.svg)](https://github.com/wslongchen/webwechat_api/blob/master/README.md)
 # 网页微信API（node版） 
 
 > 希望这些能够为您带来帮助.
