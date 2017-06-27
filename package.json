@@ -3,10 +3,10 @@
   "version": "1.0.4",
   "description": "web wechat helper",
   "main": "index.js",
-  "bin":{
-    "webwx" : "./bin/webwx.js"
-    },
-  "files" : [
+  "bin": {
+    "webwx": "./bin/webwx.js"
+  },
+  "files": [
     "libs",
     "*.js"
   ],
@@ -25,11 +25,12 @@
   },
   "homepage": "https://github.com/wslongchen/webwechat_api#readme",
   "dependencies": {
-    "nodemailer" : "latest",
-    "request" : "latest",
-    "node-schedule" : "latest",
-    "xmlreader" : "latest",
-    "qrcode-terminal" : "latest",
-    "commander" : "latest"
+    "nodemailer": "latest",
+    "request": "latest",
+    "node-schedule": "latest",
+    "xmlreader": "latest",
+    "qrcode-terminal": "latest",
+    "commander": "latest",
+    "single-line-log": "latest"
   }
 }

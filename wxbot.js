@@ -3,6 +3,7 @@
 var wechatapi = require('./src/wechatapi');
 var config = require('./libs/core/config');
 var schedule = require('node-schedule');
+var ProgressBar = require('./libs/core/progressbar');
 
 //联系人列表
 var MemberList =new Array();
@@ -11,7 +12,7 @@ var specialUsersList = new Array();
 var groupList =new Array();
 var groupUsers={};
 var time1;
-
+var pb = new ProgressBar('下载进度', 50);
 exports.start=function(){
 	wechatapi.getUUID();
 	time1=setInterval(test,1000);
@@ -40,14 +41,21 @@ function test(){
 		}
 }
 
+
+function downloading(num,total) {
+ if (num <= total) {
+  // 更新进度条
+  pb.render({ completed: num, total: total });
+ }
+}
+
 function getContact(){
 	wechatapi.getContact(function(data){
 		var result=JSON.parse(data);
 	  	if(result.BaseResponse.Ret==0){
-		    if(config.isDebug){
-		      console.log("获取联系人列表成功...共"+result.MemberCount +'位联系人');
-		    }
+		    
 		    for(var i=0;i<result.MemberList.length;i++){
+		    	downloading(i+1,result.MemberList.length);
 		    	var member=result.MemberList[i];
 		    	if(member.VerifyFlag != 0){//公众号/服务号
 		    		publicUsersList.push(member);
@@ -72,6 +80,9 @@ function getContact(){
 		    	if(groupIds.length>0){
 		    		fetchGroupContacts(groupIds);
 		    	}
+		    }
+		    if(config.isDebug){
+		      console.log("获取联系人列表成功...共"+result.MemberCount +'位联系人');
 		    }
 		  }else{
 		    if(config.isDebug){
