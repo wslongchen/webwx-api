@@ -13,12 +13,12 @@
 
 Can be installed with:
 ```bash
-    $ npm install webwechat_api
+    $ npm install webwx-api
     $ npm link
 ```
 and used:
 ```js
-    var api = require('webwechat_api');
+    var api = require('webwx-api');
 ```
 ## Usage
 + To use api.mothodName to create your own WeChat robot.
@@ -69,10 +69,10 @@ To setup the development envrionment run `npm install`
 [biezhi]: https://github.com/biezhi/wechat-robot
 [example-img]: https://github.com/wslongchen/webwechat_api/blob/master/screenshot.png
 [docs-image]: https://img.shields.io/badge/文档-中文-blue.svg
-[docs-url]: https://github.com/wslongchen/webwechat_api/blob/master/README_CN.md
-[npm-image]: https://img.shields.io/npm/v/webwechat_api.svg
-[npm-url]: https://npmjs.org/package/webwechat_api
-[downloads-image]: https://img.shields.io/npm/dm/webwechat_api.svg
-[downloads-url]: https://npmjs.org/package/webwechat_api
-[travis-img]: https://travis-ci.org/wslongchen/webwechat_api.svg?branch=master
-[travis-url]: https://travis-ci.org/wslongchen/webwechat_api
+[docs-url]: https://github.com/wslongchen/webwx-api/blob/master/README_CN.md
+[npm-image]: https://img.shields.io/npm/v/webwx-api.svg
+[npm-url]: https://npmjs.org/package/webwx-api
+[downloads-image]: https://img.shields.io/npm/dm/webwx-api.svg
+[downloads-url]: https://npmjs.org/package/webwx-api
+[travis-img]: https://travis-ci.org/wslongchen/webwx-api.svg?branch=master
+[travis-url]: https://travis-ci.org/wslongchen/webwx-api
