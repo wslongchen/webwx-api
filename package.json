@@ -1,6 +1,6 @@
 {
   "name": "webwx-api",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "web wechat helper",
   "main": "index.js",
   "bin": {
@@ -12,7 +12,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wslongchen/webwechat_api.git"
+    "url": "git+https://github.com/wslongchen/webwx-api.git"
   },
   "keywords": [
     "wecat",
@@ -21,9 +21,9 @@
   "author": "mrpan",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/wslongchen/webwechat_api/issues"
+    "url": "https://github.com/wslongchen/webwx-api/issues"
   },
-  "homepage": "https://github.com/wslongchen/webwechat_api#readme",
+  "homepage": "https://github.com/wslongchen/webwx-api#readme",
   "dependencies": {
     "nodemailer": "latest",
     "request": "latest",
