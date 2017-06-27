@@ -11,15 +11,7 @@ var publicUsersList=new Array();
 var specialUsersList = new Array();
 var groupList =new Array();
 var groupUsers={};
-var SPECIALUSER = ["newsapp", "filehelper", "weibo", "qqmail",
-            "fmessage", "tmessage", "qmessage", "qqsync",
-            "floatbottle", "lbsapp", "shakeapp", "medianote",
-            "qqfriend", "readerapp", "blogapp", "facebookapp",
-            "masssendapp", "meishiapp", "feedsapp", "voip",
-            "blogappweixin", "brandsessionholder", "weixin",
-            "weixinreminder", "officialaccounts", "wxitil",
-            "notification_messages", "wxid_novlwrv3lqwv11",
-            "gh_22b87fa7cb3c", "userexperience_alarm"];
+
 
 wechatapi.getUUID();
 var time1=setInterval(test,1000);

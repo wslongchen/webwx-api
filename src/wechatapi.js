@@ -96,7 +96,7 @@ wechatapi.wxStatusNotify = function(callback){
   config.options.path=config.wxPath.wxStatusNotify + '?lang=zh_CN&pass_ticket='+config.wxConfig.pass_ticket;
   config.options.method='POST';
   //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
-  var clientMsgId=(new Date().getTime()+'').substring(0,4)+(Math.random().toFixed(4)+'').substring(2,6);
+  var clientMsgId = (+new Date + Math.random().toFixed(3)).replace('.', '');
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
@@ -121,7 +121,7 @@ wechatapi.wxStatusNotify = function(callback){
 //发送消息
 function webwxsendmsg(msg){
   config.options.hostname=config.wxHost.main_host;
-  config.options.path=config.wxPath.webWxSendMsg + '?pass_ticket='+config.wxConfig.pass_ticket;
+  config.options.path=config.wxPath.webWxSendMsg + '?lang=zh_CN&pass_ticket='+config.wxConfig.pass_ticket;
   config.options.method='POST';
   //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
   config.data={
@@ -138,13 +138,15 @@ function webwxsendmsg(msg){
     'Content-Type': 'application/json;charset=utf-8',
     'Content-Length':config.params.length
   };
+  console.log(config.params);
+  console.log(config.options);
   requestHttps(callbackWebwxsendmsg);
 }
 
 //发送文字消息
 wechatapi.sendTextMessage = function (content,from,to){
-  var id=(new Date().getTime()+'').substring(0,4)+(Math.random().toFixed(4)+'').substring(2,6);
-  var data ='wo yi da zhong wen jiu luan ma a ,lao tie';
+  var id=(+new Date + Math.random().toFixed(3)).replace('.', '');
+  content = eval("'" + content + "'");
   var msg={
       Type : 1,
       Content : content,
@@ -345,7 +347,7 @@ wechatapi.updateChatRoom = function(add_arr,del_arr,invite_arr){
 /*基本网络请求*/
 function requestHttps(callback){
   var req = http.request(config.options, function (res) {   
-    res.setEncoding('utf8');
+    res.setEncoding('utf-8');
     var headers=res.headers;
     var responseString = '';
     var cookie=headers['set-cookie'];
@@ -495,6 +497,7 @@ function callbackStatusNotify(data){
 //微信发送消息回调
 function callbackWebwxsendmsg(data){
   config.resbonseData = data;
+  console.log(data);
   var result=JSON.parse(data);
   if(result.BaseResponse.Ret==0){
     if(config.isDebug){
@@ -648,3 +651,97 @@ module.exports = wechatapi;
 
 
 
+function EncodeUtf8(s1)
+{
+      var s = escape(s1);
+      var sa = s.split("%");
+      var retV ="";
+      if(sa[0] != "")
+      {
+         retV = sa[0];
+      }
+      for(var i = 1; i < sa.length; i ++)
+      {
+           if(sa[i].substring(0,1) == "u")
+           {
+               retV += Hex2Utf8(Str2Hex(sa[i].substring(1,5)));
+
+           }
+           else retV += "%" + sa[i];
+      }
+
+      return retV;
+}
+function Str2Hex(s)
+{
+      var c = "";
+      var n;
+      var ss = "0123456789ABCDEF";
+      var digS = "";
+      for(var i = 0; i < s.length; i ++)
+      {
+         c = s.charAt(i);
+         n = ss.indexOf(c);
+         digS += Dec2Dig(eval(n));
+
+      }
+      //return value;
+      return digS;
+}
+function Dec2Dig(n1)
+{
+      var s = "";
+      var n2 = 0;
+      for(var i = 0; i < 4; i++)
+      {
+         n2 = Math.pow(2,3 - i);
+         if(n1 >= n2)
+         {
+            s += '1';
+            n1 = n1 - n2;
+          }
+         else
+          s += '0';
+
+      }
+      return s;
+
+}
+function Dig2Dec(s)
+{
+      var retV = 0;
+      if(s.length == 4)
+      {
+          for(var i = 0; i < 4; i ++)
+          {
+              retV += eval(s.charAt(i)) * Math.pow(2, 3 - i);
+          }
+          return retV;
+      }
+      return -1;
+}
+function Hex2Utf8(s)
+{
+     var retS = "";
+     var tempS = "";
+     var ss = "";
+     if(s.length == 16)
+     {
+         tempS = "1110" + s.substring(0, 4);
+         tempS += "10" + s.substring(4, 10);
+         tempS += "10" + s.substring(10,16);
+         var sss = "0123456789ABCDEF";
+         for(var i = 0; i < 3; i ++)
+         {
+            retS += "%";
+            ss = tempS.substring(i * 8, (eval(i)+1)*8);
+
+
+
+            retS += sss.charAt(Dig2Dec(ss.substring(0,4)));
+            retS += sss.charAt(Dig2Dec(ss.substring(4,8)));
+         }
+         return retS;
+     }
+     return "";
+} 

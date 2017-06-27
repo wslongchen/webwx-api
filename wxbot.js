@@ -15,6 +15,8 @@ var time1;
 exports.start=function(){
 	wechatapi.getUUID();
 	time1=setInterval(test,1000);
+	 // var data =decodeHtmlEntity("@天天 你港的我完全听不懂啊老铁！[尴尬]");
+	  //console.log(data);
 }
 
 function test(){
@@ -25,7 +27,8 @@ function test(){
 				    if(config.isDebug){
 				      console.log("开启微信状态通知成功...");
 				    }
-				    getContact();
+				    //getContact();
+				    wechatapi.sendTextMessage("@天天 你港的我完全听不懂啊老铁！[尴尬]",config.user.UserName,'filehelper');
 				  }else{
 				    if(config.isDebug){
 				      console.log("开启微信状态通知失败...");
@@ -195,12 +198,25 @@ function handle_msg(result){
 			var username =content.match(/(\S*):/)[1];
 			var user = getUserInfoGroup(fromUserName,username);
 			var group = getGroupInfo(fromUserName);
+			if(group == undefined){
+				group ={
+					NickName : '陌生群'
+				};
+			}
+			if(user == undefined){
+				user ={
+					NickName : '群中陌生人'
+				};
+			}
 			if(msgType == 1){
+				content=unescape(content.replace(/\u/g, "%u"));
+				console.log(content);
 				var msg=content.match(/<br\/>(\S*)/)[1];
 				if(msg.substr(0,1).trim()=='@'){
 					var infos=msg.split(' ');
+					console.log(infos);
 					if(infos.length>0){
-						if(infos[0].replace("@","").trim() == +config.user.NickName){
+						if(infos[0].replace("@","").trim() == +config.user.NickName.trim()){
 							//@自己的消息
 							msg=content.replace(username+":<br/>","").replace('@'+user.NickName,"").trim();
 							if(msg.length>0 && config.isDebug){
@@ -213,6 +229,10 @@ function handle_msg(result){
 								console.log("@了自己["+group.NickName+"("+user.NickName+")]");
 							}
 
+						}else{
+							if(config.isDebug){
+								console.log('收到群消息['+user.NickName+']:'+msg);
+							}
 						}
 					}
 					
@@ -229,10 +249,26 @@ function handle_msg(result){
 				var to = getUserInfo(toUserName);
 				if(wechatapi.getAccountType(toUserName) == '群聊'){
 					var group = getGroupInfo(toUserName);
+					if(group == undefined){
+						group ={
+							NickName : '陌生群'
+						};
+					}
 					if(config.isDebug){
 						console.log('回复群消息['+group.NickName+']:'+msg);
 					}
 					continue;
+				}
+				if(to ==undefined){
+					if(wechatapi.SPECIALUSER.toString().indexOf(member.UserName) > -1){
+						//特殊账号
+						to = {
+							NickName : '特殊账号'
+						};
+					}
+					to = {
+						NickName : '陌生人'
+					};
 				}
 				if(config.isDebug){
 					console.log('回复个人消息['+to.NickName+']:'+msg);
