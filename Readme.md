@@ -27,6 +27,15 @@ and used:
            //do something
        });
 ```
+or
+```js
+  wechatapi.getUUID.then((resolve) =>{
+      //do something
+  },(reject) => {
+      //do something
+  });
+```
+
 + Run wxbot.js or webwx test, which contains the basic functions and cases.And You can run webwx -h for help
 ```bash	
     node wxbox.js
@@ -35,15 +44,16 @@ or
 ```bash	
     webwx test
 ```
-+ More methods, contents, and method names can be viewed in wechatapi.js.
++ More methods, contents, and method names can be viewed in wechatapi.js and wxapi.js.
 
 # Updates
 
 - Get information about contacts (public numbers, group chats)
 - Receive messages in real time (able to identify group @ messages)
-- Send text messages
+- Send text messages (to solve text encoding problems)
+- Add group chat, and pull people into the group
 
-【1.0.2】 --17/06/26
+【1.0.2】 --17/06/28
 
 # Support
 
