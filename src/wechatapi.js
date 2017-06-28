@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 // 导入基本模块
 var http = require('https');  
 var fs = require('fs');
@@ -16,7 +16,7 @@ var wechatapi={};
 //登陆以及微信初始化
 var deviceID="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
 
-wechatapi.getUUID= function (){
+wechatapi.getUUID= function (callback){
   config.data = {  
     appid : 'wx782c26e4c19acffb',  
     fun : 'new',
@@ -25,7 +25,11 @@ wechatapi.getUUID= function (){
   config.options.hostname = config.wxHost.login_host;
   config.options.path = '/jslogin?' + qs.stringify(config.data);
   //发起请求
-  requestHttps(callbackQrCode);
+  if(callback){
+    requestHttps(callback);
+  }else{
+    requestHttps(callbackQrCode);
+  }
 }
 
 //实时监听登录情况,每5秒执行一次
@@ -39,14 +43,18 @@ wechatapi.waitForLoginSchedule=function (){
 }
 
 //等待登录
-wechatapi.waitForLogin = function (){
+wechatapi.waitForLogin = function (callback){
   config.tips=1;
   config.data = { 
     tip : config.tips,
     uuid : config.uuid
   };
   config.options.path=config.wxPath.waitForLogin+'?' + qs.stringify(config.data);
-  requestHttps(callbackLogin);
+  if(callback){
+    requestHttps(callback);
+  }else{
+    requestHttps(callbackLogin);
+  }
 }
 
 //请求登录
@@ -59,7 +67,7 @@ wechatapi.login = function (url){
 }
 
 //微信初始化
-wechatapi.wxInit = function (){
+wechatapi.wxInit = function (callback){
   if(config.isDebug){
     console.log("微信初始化...");
   }
@@ -74,11 +82,6 @@ wechatapi.wxInit = function (){
   };
   config.params=JSON.stringify(config.data);
 
-  /*if(host){
-    config.options.hostname= host;
-  }else{
-    config.options.hostname= config.wxHost.main_host;
-  }*/
   config.options.hostname= config.wxHost.main_host;
   config.options.path=config.wxPath.wxInit+'?r='+new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
   config.options.method='POST';
@@ -87,7 +90,11 @@ wechatapi.wxInit = function (){
     'Content-Length':config.params.length,
     'Cookie': config.wxCookie
   };
-  requestHttps(callbackInit);
+  if(callback){
+    requestHttps(callback);
+  }else{
+    requestHttps(callbackInit);
+  }
 }
 
 //开启微信状态通知
@@ -136,17 +143,20 @@ function webwxsendmsg(msg){
   config.params=JSON.stringify(config.data);
   config.options.headers = {
     'Content-Type': 'application/json;charset=utf-8',
-    'Content-Length':config.params.length
+    'Content-Length': Buffer.byteLength(config.params,'utf8')
   };
   console.log(config.params);
   console.log(config.options);
-  requestHttps(callbackWebwxsendmsg);
+  if(callback){
+    requestHttps(callback);
+  }else{
+    requestHttps(callbackWebwxsendmsg);
+  }
 }
 
 //发送文字消息
-wechatapi.sendTextMessage = function (content,from,to){
+wechatapi.sendTextMessage = function (content,from,to,callback){
   var id=(+new Date + Math.random().toFixed(3)).replace('.', '');
-  content = eval("'" + content + "'");
   var msg={
       Type : 1,
       Content : content,
@@ -158,7 +168,7 @@ wechatapi.sendTextMessage = function (content,from,to){
     if(config.isDebug){
       console.log('发送文字消息：'+content);
     }
-    webwxsendmsg(msg);
+    webwxsendmsg(msg,callback);
 }
 
 //获取联系人
@@ -402,8 +412,6 @@ function showQrCode(uuid){
     }
     wechatapi.waitForLoginSchedule();
   }
-  
-  
 }
 
 //扫描登录回调

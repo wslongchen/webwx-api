@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 // 导入基本模块
 var wechatapi = require('./src/wechatapi');
 var config = require('./libs/core/config');
@@ -12,13 +12,13 @@ var specialUsersList = new Array();
 var groupList =new Array();
 var groupUsers={};
 var time1;
-var pb = new ProgressBar('下载进度', 50);
-exports.start=function(){
+var pb = new ProgressBar('进度', 50);
+
+exports.startBot=function(){
 	wechatapi.getUUID();
 	time1=setInterval(test,1000);
-	 // var data =decodeHtmlEntity("@天天 你港的我完全听不懂啊老铁！[尴尬]");
-	  //console.log(data);
 }
+
 
 function test(){
 	if(config.retFlag){
@@ -28,8 +28,7 @@ function test(){
 				    if(config.isDebug){
 				      console.log("开启微信状态通知成功...");
 				    }
-				    //getContact();
-				    wechatapi.sendTextMessage("@天天 你港的我完全听不懂啊老铁！[尴尬]",config.user.UserName,'filehelper');
+				    getContact();
 				  }else{
 				    if(config.isDebug){
 				      console.log("开启微信状态通知失败...");
