@@ -1,6 +1,6 @@
 {
   "name": "webwx-api",
-  "version": "1.0.6",
+  "version": "1.0.12",
   "description": "web wechat helper",
   "main": "index.js",
   "bin": {
@@ -8,6 +8,8 @@
   },
   "files": [
     "libs",
+    "bin",
+    "src",
     "*.js"
   ],
   "repository": {
@@ -25,12 +27,13 @@
   },
   "homepage": "https://github.com/wslongchen/webwx-api#readme",
   "dependencies": {
-    "nodemailer": "latest",
-    "request": "latest",
-    "node-schedule": "latest",
-    "xmlreader": "latest",
-    "qrcode-terminal": "latest",
     "commander": "latest",
-    "single-line-log": "latest"
+    "node-schedule": "latest",
+    "nodemailer": "latest",
+    "q": "^1.5.0",
+    "qrcode-terminal": "latest",
+    "request": "latest",
+    "single-line-log": "latest",
+    "xmlreader": "latest"
   }
 }
