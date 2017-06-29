@@ -29,23 +29,33 @@
         //do something
     });
 ```
+或者
+```js
+  wechatapi.getUUID.then((resolve) =>{
+      //do something
+  },(reject) => {
+      //do something
+  });
+```
+
 运行wxbot.js文件或者运行webwx test,案例中包含基本的方法与功能。运行webwx -h获取帮助。
 ```bash
 	node wxbox.js
 ```
-or
+或者
 ```bash
 	webwx test
 ```
-更多的方法、接口名可以在wechatapi.js中查看.
+更多的方法、接口名可以在wechatapi.js以及wxapi.js中查看.
 
 # 更新
 
 - 获取联系人（公众号、群聊）信息
 - 实时接收消息（能识别群@消息）
-- 发送文字消息
+- 发送文字消息(解决文字编码问题)
+- 增加群聊，以及拉人入群
 
-【1.0.2】 --17/06/26
+【1.0.2】 --17/06/28
 
 # 支持
 
