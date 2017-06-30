@@ -293,14 +293,11 @@ wechatapi.webwxsync = function(callback){
 }
 
 //创建聊天室
-wechatapi.createChatRoom = function(uid_arr,callback){
+wechatapi.createChatRoom = function(topic,memberList,callback){
   config.options.hostname=config.wxHost.main_host;
-  config.options.path=config.wxPath.createChatRoom+'?r='+ new Date().getTime();
+  config.options.path=config.wxPath.createChatRoom+'?lang=zh_CN&r='+ new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket;
   config.options.method='POST';
-  var ids=new Array();
-  for(var id in uid_arr){
-    ids.push({UserName:id});
-  }
+
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
@@ -308,9 +305,9 @@ wechatapi.createChatRoom = function(uid_arr,callback){
         Skey : config.wxConfig.skey,
         DeviceID : deviceID
       },
-      Topic : '',
-      MemberCount : uid_arr.length,
-      MemberList : ids
+      Topic : topic,
+      MemberCount : memberList.length,
+      MemberList : memberList
   };
   config.params = JSON.stringify(config.data);
   config.options.headers = {
@@ -322,14 +319,10 @@ wechatapi.createChatRoom = function(uid_arr,callback){
 }
 
 //更新聊天室
-wechatapi.updateChatRoom = function(add_arr,del_arr,invite_arr){
+wechatapi.updateChatRoom = function(chatRoomUserName,memberList,fun,callback){
   config.options.hostname=config.wxHost.main_host;
-  config.options.path=config.wxPath.updateChatRoom+'?r='+ new Date().getTime();
+  config.options.path=config.wxPath.updateChatRoom+'?fun='+fun+'&r='+ new Date().getTime();
   config.options.method='POST';
-  var ids=new Array();
-  for(var id in uid_arr){
-    ids.push({UserName:id});
-  }
   config.data={
       BaseRequest : {
         Uin : config.wxConfig.wxuin,
@@ -337,19 +330,153 @@ wechatapi.updateChatRoom = function(add_arr,del_arr,invite_arr){
         Skey : config.wxConfig.skey,
         DeviceID : deviceID
       },
-      NewTopic : '',
-      MemberCount : uid_arr.length,
-      ChatRoomName : '',
-      MemberList : ids,
-      AddMemberList : add_arr,
-      DelMemberList : del_arr,
-      InviteMemberList : invite_arr
+      ChatRoomName : ChatRoomName
   };
+  if(fun == 'addmember'){
+    config.data.AddMemberList = memberList;
+  }else if(fun == 'delmember'){
+    config.data.DelMemberList = memberList;
+  }else if(fun == 'invitemember'){
+    config.data.InviteMemberList = memberList;
+  }
   config.params = JSON.stringify(config.data);
   config.options.headers = {
     'Content-Type': 'application/json;charset=utf-8',
     'Content-Length':config.params.length,
     'Cookie': config.wxCookie
+  };
+  requestHttps(callback);
+}
+
+//获取头像
+wechatapi.getHeadImg = function(username,callback){
+  config.options.hostname=config.wxHost.main_host;
+  config.options.path=config.wxPath.wxGetHeadImg+'?username='+username+'&skey='+config.wxConfig.skey;
+  config.options.method='GET';
+  //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  var rr=new Date().getTime();
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : deviceID
+      },
+      SyncKey : config.syncKey,
+      rr : ~rr
+  };
+  config.params = JSON.stringify(config.data);
+  config.options.headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length
+  };
+  requestHttps(callback);
+}
+
+//消息撤回
+wechatapi.revokeMsg = function(msgId,toId,callback){
+  config.options.hostname=config.wxHost.main_host;
+  config.options.path=config.wxPath.wxRevokeMsg+'?r='+ new Date().getTime();
+  config.options.method='POST';
+  var id=(+new Date + Math.random().toFixed(3)).replace('.', '');
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : deviceID
+      },
+      ToUserName : toId,
+      SvrMsgId : msgId,
+      ClientMsgId : id
+  };
+  config.params = JSON.stringify(config.data);
+  config.options.headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length
+  };
+  requestHttps(callback);
+}
+
+//推送登陆
+wechatapi.pushLogin = function(uin,callback){
+  config.options.hostname=config.wxHost.main_host;
+  if(uin){
+    config.options.path=config.wxPath.wxPushLoginUrl+'?uin='+uin
+  }else{
+    config.options.path=config.wxPath.wxPushLoginUrl+'?uin='+config.wxConfig.wxuin
+  }
+  config.options.path=config.wxPath.wxPushLoginUrl+'?uin='+uin
+  config.options.method='GET';
+  config.params = "";
+  config.options.headers = {
+  };
+  requestHttps(callback);
+}
+
+//通过好友请求
+wechatapi.verifyUser = function(userName,ticket,callback){
+  config.options.hostname=config.wxHost.main_host;
+  config.options.path=config.wxPath.wxVerifyUser+'?lang=zh_CN&r='+ new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket;
+  config.options.method='POST';
+  var id=(+new Date + Math.random().toFixed(3)).replace('.', '');
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : deviceID
+      },
+      Opcode : 3,
+      VerifyUserListSize : 1,
+      VerifyUserList : [{
+          Value: UserName,
+          VerifyUserTicket: ticket
+        }],
+      VerifyContent : '',
+      SceneListCount : 1,
+      SceneList: [33],
+      skey : config.wxConfig.skey
+
+  };
+  config.params = JSON.stringify(config.data);
+  config.options.headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length
+  };
+  requestHttps(callback);
+}
+
+
+//添加好友
+wechatapi.addFriend = function(userName,content,callback){
+  config.options.hostname=config.wxHost.main_host;
+  config.options.path=config.wxPath.wxVerifyUser+'?lang=zh_CN&r='+ new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket;
+  config.options.method='POST';
+  var id=(+new Date + Math.random().toFixed(3)).replace('.', '');
+  config.data={
+      BaseRequest : {
+        Uin : config.wxConfig.wxuin,
+        Sid : config.wxConfig.wxsid,
+        Skey : config.wxConfig.skey,
+        DeviceID : deviceID
+      },
+      Opcode : 2,
+      VerifyUserListSize : 1,
+      VerifyUserList : [{
+          Value: UserName,
+          VerifyUserTicket: ''
+        }],
+      VerifyContent : '',
+      SceneListCount : 1,
+      SceneList: [33],
+      skey : config.wxConfig.skey
+
+  };
+  config.params = JSON.stringify(config.data);
+  config.options.headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Content-Length':config.params.length
   };
   requestHttps(callback);
 }

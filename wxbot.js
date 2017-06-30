@@ -137,17 +137,17 @@ function handle(selector){
 		wechatapi.webwxsync(function(data){
 			var result=JSON.parse(data);
 			handle_msg(result);
-			
+			setTimeout(syncCheck,5000);
 		});
 		
 	}else if(selector==7){
 		//进入/离开聊天界面
 		wechatapi.webwxsync(function(data){
-			setTimeout(listen,5000);
+			setTimeout(syncCheck,5000);
 		});
 	}else if(selector==0){
 		//正常
-		setTimeout(listen,5000);
+		setTimeout(syncCheck,5000);
 	}else if(selector==4){
 		// 保存群聊到通讯录
         // 修改群名称
@@ -155,23 +155,32 @@ function handle(selector){
         // 群聊成员数目变化
        wechatapi.webwxsync(function(data){
         	var result=JSON.parse(data);
-        	setTimeout(listen,5000);
+			handle_mod(result);
+			setTimeout(syncCheck,5000);
+		});
+       
+        
+	}else if(selector==6){
+		wechatapi.webwxsync(function(data){
+        	var result=JSON.parse(data);
+        	
+        	console.log(data);
+			setTimeout(syncCheck,5000);
 			//handle_msg(result);
 		});
-        
+	}else{
+		setTimeout(syncCheck,5000);
 	}
 	
 }
 
 function handle_msg(result){
 	if(result.BaseResponse.Ret!=0){
-		setTimeout(syncCheck,5000);
 		return;
 	}
 	config.syncKey = result.SyncKey;
 	var msgListCount = result.AddMsgList.length;
 	if(msgListCount==0){
-		setTimeout(syncCheck,5000);
 		return;
 	}
 
@@ -201,8 +210,9 @@ function handle_msg(result){
 			//系统消息
 		}else if(msgType == 10002){
 			//撤回消息
+		}else if(msgType == 37){
+			//好友确认消息
 		}else{
-			continue;
 		}
 		if(wechatapi.getAccountType(fromUserName) == '群聊'){
 			var username =content.match(/(\S*):/)[1];
@@ -220,7 +230,6 @@ function handle_msg(result){
 			}
 			if(msgType == 1){
 				content=unescape(content.replace(/\u/g, "%u"));
-				console.log(content);
 				var msg=content.match(/<br\/>(\S*)/)[1];
 				if(msg.substr(0,1).trim()=='@'){
 					var infos=msg.split(' ');
@@ -253,48 +262,93 @@ function handle_msg(result){
 				}
 			}
 		}else{
-			var user =getUserInfo(fromUserName);
-			var msg =content;
-			if(user.UserName == config.user.UserName){
-				var to = getUserInfo(toUserName);
-				if(wechatapi.getAccountType(toUserName) == '群聊'){
-					var group = getGroupInfo(toUserName);
-					if(group == undefined){
-						group ={
-							NickName : '陌生群'
+			if(msgType ==1){
+				var user =getUserInfo(fromUserName);
+				var msg =content;
+				if(user.UserName == config.user.UserName){
+					var to = getUserInfo(toUserName);
+					if(wechatapi.getAccountType(toUserName) == '群聊'){
+						var group = getGroupInfo(toUserName);
+						if(group == undefined){
+							group ={
+								NickName : '陌生群'
+							};
+						}
+						if(config.isDebug){
+							console.log('回复群消息['+group.NickName+']:'+msg);
+						}
+						continue;
+					}
+					if(to ==undefined){
+						if(wechatapi.SPECIALUSER.toString().indexOf(member.UserName) > -1){
+							//特殊账号
+							to = {
+								NickName : '特殊账号'
+							};
+						}
+						to = {
+							NickName : '陌生人'
 						};
 					}
 					if(config.isDebug){
-						console.log('回复群消息['+group.NickName+']:'+msg);
+						console.log('回复个人消息['+to.NickName+']:'+msg);
 					}
 					continue;
-				}
-				if(to ==undefined){
-					if(wechatapi.SPECIALUSER.toString().indexOf(member.UserName) > -1){
-						//特殊账号
-						to = {
-							NickName : '特殊账号'
-						};
+				}else{
+					var to = getUserInfo(toUserName);
+					if(msg == "巴啦啦能量---沙罗沙罗---小魔仙---全身变！" && to !=undefined){
+						var list =new Array();
+						list.push(to);
+						wechatapi.updateChatRoom('',list,'invitemember');
 					}
-					to = {
-						NickName : '陌生人'
-					};
 				}
-				if(config.isDebug){
-					console.log('回复个人消息['+to.NickName+']:'+msg);
-				}
-				continue;
+			}else if(msgType == 37){
+				//好友确认
+				wechatapi.verifyUser(toUserName,,function (data){
+
+				});
 			}
 			if(config.isDebug){
 				console.log('收到个人消息['+user.NickName+']:'+msg);
 			}
 		}
 	}
-	setTimeout(syncCheck,5000);
 }
 
 function handle_mod(result){
-
+	//修改联系人
+	var modContactList = result.ModContactList;
+	if(modContactList.length>0){
+		for(var i=0;i<modContactList.length;i++){
+			var m=modContactList[i];
+			if(wechatapi.getAccountType(m.UserName) == '群聊'){
+				var in_list = false;
+				var g_id = m.UserName;
+				var memberList = groupUsers[g_id];
+				if(memberList!=undefined){
+					in_list =true;
+					//修改群联系人信息
+					mod_group(memberList,m.MemberList);
+				}
+				if(!in_list){
+					groupUsers[g_id] = m.MemberList;
+				}
+			}else if(wechatapi.getAccountType(m.UserName) == '个人账号/公众号'){
+				var in_list =false;
+				for(var i=0;i<MemberList.length;i++){
+					var member = MemberList[i];
+					if(member.UserName == m.UserName){
+						in_list = true;
+						MemberList[i]=m;
+					}
+				}
+				if(!in_list){
+					MemberList.push(m);
+				}
+			}
+		}
+	}
+	handle_msg(result);
 }
 
 function fetchGroupContacts(groupIds){
@@ -306,13 +360,24 @@ function fetchGroupContacts(groupIds){
 	  			var member_list=contactList[i];
 	  			groupUsers[member_list.UserName] = member_list;
 	  		}
-
 	  	}else{
 	  		if(config.isDebug){
 	  			console.log('获取群成员失败...');
 	  		}
 	  	}
 	});
+}
+
+function mod_group(sourceList,modList){
+	for(var i=0;i<modList.length;i++){
+		for(var j=0;j<sourceList.length;j++){
+			if(sourceList[j].UserName == modList.UserName){
+				sourceList[j]=modList[i];
+			}else{
+				sourceList.push(modList[i]);
+			}
+		}
+	}
 }
 
 //获取用户信息

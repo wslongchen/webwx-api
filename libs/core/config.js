@@ -26,7 +26,29 @@ exports.wxPath = {
 	webWxSync : '/cgi-bin/mmwebwx-bin/webwxsync',
 	webWxSendMsg : '/cgi-bin/mmwebwx-bin/webwxsendmsg',
 	createChatRoom : '/cgi-bin/mmwebwx-bin/webwxcreatechatroom',
-	updateChatRoom : '/cgi-bin/mmwebwx-bin/webwxupdatechatroom'
+	updateChatRoom : '/cgi-bin/mmwebwx-bin/webwxupdatechatroom',
+	wxCheckUrl : '/cgi-bin/mmwebwx-bin/webwxcheckurl',
+	wxVerifyUser : '/cgi-bin/mmwebwx-bin/webwxverifyuser',
+	wxFeedback : '/cgi-bin/mmwebwx-bin/webwxsendfeedback',
+	wxReport : '/cgi-bin/mmwebwx-bin/webwxstatreport',
+	wxSearch : '/cgi-bin/mmwebwx-bin/webwxsearchcontact',
+	wxoplog : '/cgi-bin/mmwebwx-bin/webwxoplog',
+	checkUpload : '/cgi-bin/mmwebwx-bin/webwxcheckupload',
+	wxRevokeMsg : '/cgi-bin/mmwebwx-bin/webwxrevokemsg',
+	wxPushLoginUrl : '/cgi-bin/mmwebwx-bin/webwxpushloginurl',
+	wxGetIcon : '/cgi-bin/mmwebwx-bin/webwxgeticon',
+	wxSendMsgImg : '/cgi-bin/mmwebwx-bin/webwxsendmsgimg',
+	wxSendMsgVedio : '/cgi-bin/mmwebwx-bin/webwxsendvideomsg',
+	wxSendMsgEmoticon : '/cgi-bin/mmwebwx-bin/webwxsendemoticon',
+	wxSendAppMsg : '/cgi-bin/mmwebwx-bin/webwxsendappmsg',
+	wxGetHeadImg : '/cgi-bin/mmwebwx-bin/webwxgetheadimg',
+	wxGetMsgImg : '/cgi-bin/mmwebwx-bin/webwxgetmsgimg',
+	wxGetMedia : '/cgi-bin/mmwebwx-bin/webwxgetmedia',
+	wxGetVideo : '/cgi-bin/mmwebwx-bin/webwxgetvideo',
+	wxLogout : '/cgi-bin/mmwebwx-bin/webwxlogout',
+	wxGetVoice : '/cgi-bin/mmwebwx-bin/webwxgetvoice'
+
+
 };
 exports.wxCookie;
 exports.options={

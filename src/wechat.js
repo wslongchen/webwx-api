@@ -1,18 +1,70 @@
 ﻿#!/usr/bin/env node
 // 导入基本模块
-var http = require('https');  
-var fs = require('fs');
-var request = require('request');
-var qs = require('querystring');
-var config = require('../libs/core/config');
-var schedule = require('node-schedule');
-var xmlreader = require("xmlreader"); 
-var qrcode = require('qrcode-terminal');
-var Q = require('q');
+import wxCore from './wxcore'
+import {
+  getCONF,
+  isStandardBrowserEnv,
+} from './utils'
 
-/*微信封装方法*/
+/*微信核心类*/
+class wxCore {
+  constructor(){
+    this.prop = {
+      uuid : '',
+      uin : '',
+      sid : '',
+      skey : '',
+      pass_ticket : '',
+      syncKeyStr : '',
+      syncKey  : {
+        List : []
+      }
+    }
+    this.conf = getCONF()
+    this.cookie = {}
+    this.user = {}
+    this.request = new Request({
+      Cookie : this.cookie
+    })
+  }
 
-const deviceID="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
+  get wxData(){
+    return {
+      prop : this.prop,
+      conf : this.conf,
+      cookie : this.cookie,
+      user : this.user
+    }
+  }
+
+  set wxData(data){
+    Object.keys(data).forEach(key =>{
+      Object.assign(this[key],data[key])
+    })
+  }
+
+  getUUID(){
+    let data = {
+      method : 'POST',
+      url : this.conf.API_jsLogin
+    }
+    return Promise.resolve().then(() => {
+      return this.request(data).then(result => {
+        let window = { QRLogin : {} }
+        eval(result.data)
+        assert.equal(window.QRLogin.code,200,ress)
+        this.prop.uuid = window.QRLogin.uuid
+        return window.QRLogin.uuid
+      })
+    }).catch(err => {
+      err.msg = 'UUID获取失败'
+    })
+  }
+
+
+  
+}
+
 
 /**
  * 获取用户UUID

@@ -9,7 +9,7 @@ program.command('test')
        .alias('example')  
        .description('启动一个案例')  
        .action(function () {  
-        	wxbot.start();
+        	wxbot.startBot();
        });
 program.parse(process.argv)  
   
