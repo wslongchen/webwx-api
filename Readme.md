@@ -2,7 +2,7 @@
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
 [![Linux Build][travis-img]][travis-url]
-> Something could help for you.
+> Just want to do a WeChat robot node, the web version interface study of WeChat, later in JS can not extricate themselves, with ES2015 to write a Promise style interface, then I think ES6 is very powerful, with a cool, then see the wechat4u node project, learned a lot of posture this project, hope to be able to help you in some places.
 
 # Node Library
 
@@ -52,8 +52,8 @@ or
 - Receive messages in real time (able to identify group @ messages)
 - Send text messages (to solve text encoding problems)
 - Add group chat, and pull people into the group
-
-【1.0.2】 --17/06/28
+- Refactoring the code, adding the ES6 style
+【1.0.14】 --17/07/01
 
 # Support
 
@@ -73,7 +73,7 @@ To setup the development envrionment run `npm install`
 
 - [qrcode-terminal] by gtanner 
 - more problem fix by [biezhi]
-
+- more learning by [wechat4u]
 
 [qrcode-terminal]: https://github.com/gtanner/qrcode-terminal
 [biezhi]: https://github.com/biezhi/wechat-robot
@@ -86,3 +86,4 @@ To setup the development envrionment run `npm install`
 [downloads-url]: https://npmjs.org/package/webwx-api
 [travis-img]: https://travis-ci.org/wslongchen/webwx-api.svg?branch=master
 [travis-url]: https://travis-ci.org/wslongchen/webwx-api
+[wechat4u]: https://github.com/nodeWechat

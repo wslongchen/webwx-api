@@ -1,621 +1,175 @@
-﻿#!/usr/bin/env node
-// 导入基本模块
+﻿// 导入基本模块
 import wxCore from './wxcore'
+import EventEmitter from 'events'
+import _ from 'lodash'
+
 import {
   getCONF,
   isStandardBrowserEnv,
 } from './utils'
 
-/*微信核心类*/
-class wxCore {
-  constructor(){
-    this.prop = {
-      uuid : '',
-      uin : '',
-      sid : '',
-      skey : '',
-      pass_ticket : '',
-      syncKeyStr : '',
-      syncKey  : {
-        List : []
-      }
-    }
-    this.conf = getCONF()
-    this.cookie = {}
-    this.user = {}
-    this.request = new Request({
-      Cookie : this.cookie
-    })
+import ContactFactory from './interface/contact'
+import MessageFactory from './interface/message'
+
+import _debug from 'debug'
+const debug = _debug('wechat')
+
+/*微信实现类*/
+class Wechat extends wxCore {
+  constructor(data){
+    super(data)
+    _.extend(this,new EventEmitter())
+    this.state = this.conf.STATE.init
+    this.contacts = {}
+    this.Contact = ContactFactory(this)
+    this.Message = MessageFactory(this)
+    this.lastSyncTime = 0
+    this.syncThreadingId = 0
+    this.syncErrorCount = 0
+    this.checkPollingId = 0
+    this.retryPollingId = 0
   }
 
-  get wxData(){
-    return {
-      prop : this.prop,
-      conf : this.conf,
-      cookie : this.cookie,
-      user : this.user
-    }
+  start(){
+    debug('微信启动...')
+    return this._login().then(() => this._init())
   }
 
-  set wxData(data){
-    Object.keys(data).forEach(key =>{
-      Object.assign(this[key],data[key])
-    })
-  }
-
-  getUUID(){
-    let data = {
-      method : 'POST',
-      url : this.conf.API_jsLogin
-    }
-    return Promise.resolve().then(() => {
-      return this.request(data).then(result => {
-        let window = { QRLogin : {} }
-        eval(result.data)
-        assert.equal(window.QRLogin.code,200,ress)
-        this.prop.uuid = window.QRLogin.uuid
-        return window.QRLogin.uuid
-      })
-    }).catch(err => {
-      err.msg = 'UUID获取失败'
-    })
-  }
-
-
-  
-}
-
-
-/**
- * 获取用户UUID
- *
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.getUUID = () => {
-  return new Promise((resolve,reject) => {
-    config.data = {  
-      appid : 'wx782c26e4c19acffb',  
-      fun : 'new',
-      lang : 'zh_CN'
-    };
-    config.options.hostname = config.wxHost.login_host;
-    config.options.path = '/jslogin?' + qs.stringify(config.data);
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 显示二维码
- *
- * 可配置wxapi.qrCodeType(png=>图片下载显示，cmd=>终端显示)
- *
- * @param    {string}  uuid     用户uuid
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.showQrCode = (uuid) => {
-  return new Promise((resolve,reject) => {
-    //下载验证码
-    if(wxapi.qrCodeType == 'png'){
-      request('https://login.weixin.qq.com/qrcode/'+uuid,'qrcode').pipe(fs.createWriteStream(filename+'.png'));
-      resolve({code : 0, msg : "二维码下载成功，请扫描..."})
-    }else if(wechatapi.qrCodeType == 'cmd'){
-      qrcode.generate('https://login.weixin.qq.com/l/'+uuid, function (qrcode) {
-        console.log(qrcode);
-        resolve({code : 0, msg : '二维码显示成功，请扫描...'});
-      });
-    }else{
-      reject({code : 999,msg : '未设置二维码类型'});
-    }
-  });
-}
-
-/**
- * 等待用户登陆
- *
- * @param    {int}  tips     扫描标志
- * @param    {string}  uuid  用户uuid
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.waitForLogin = (tips,uuid) => {
-  return new Promise((resolve,reject) => {
-    config.data = { 
-      tip : tips,
-      uuid : uuid
-    };
-    config.options.path=config.wxPath.waitForLogin+'?' + qs.stringify(config.data);
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 初始化
- *
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.wxInit = () => {
-  return new Promise((resolve,reject) => {
-    config.data={
-        BaseRequest : {
-          Uin:config.wxConfig.wxuin,
-          Sid:config.wxConfig.wxsid,
-          Skey:config.wxConfig.skey,
-          DeviceID:deviceID
-        }
-    };
-    config.params=JSON.stringify(config.data);
-
-    config.options.hostname= config.wxHost.main_host;
-    config.options.path=config.wxPath.wxInit+'?r='+new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
-    config.options.method='POST';
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length,
-      'Cookie': config.wxCookie
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 登陆
- *
- * @param    {string}  url  登陆链接
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.login = (url) => {
-  return new Promise((resolve,reject) => {
-    var host=url.match(/\/\/(\S*)\/cgi-bin/)[1];
-    var p=url.match(/com(\S*)/)[1];
-    config.options.hostname=host;
-    config.options.path=p+'&fun=new&version=v2';
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 微信状态开启
- *
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.wxStatusNotify = () => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path=config.wxPath.wxStatusNotify + '?lang=zh_CN&pass_ticket='+config.wxConfig.pass_ticket;
-    config.options.method='POST';
-    var clientMsgId = (+new Date + Math.random().toFixed(3)).replace('.', '');
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        },
-        Code : 3,
-        FromUserName : config.user.UserName,
-        ToUserName :config.user.UserName,
-        ClientMsgId:clientMsgId
-    };
-
-    config.params=JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 发送文本消息
- *
- * @param    {string}  content     内容
- * @param    {String}   from         发送人
- * @param    {string}  to   接收人
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.wxSendTextMsg = (content,from,to) => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path=config.wxPath.webWxSendMsg + '?lang=zh_CN&pass_ticket='+config.wxConfig.pass_ticket;
-    config.options.method='POST';
-    var id=(+new Date + Math.random().toFixed(3)).replace('.', '');
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        },
-        Msg : {
-          Type : 1,
-          Content : content,
-          FromUserName : from,
-          ToUserName : to,
-          LocalID : id,
-          ClientMsgId : id
-        }
-    };
-    config.params=JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length': Buffer.byteLength(config.params,'utf8')
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 获取联系人列表
- *
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.getContact = () => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path= config.wxPath.getContact+'?r='+ new Date().getTime()+'&skey='+config.wxConfig.skey+'&pass_ticket='+config.wxConfig.pass_ticket;;
-    config.options.method='POST';
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        }
-    };
-    config.params=JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length,
-      'Cookie': config.wxCookie
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 获取群列表
- *
- * @param    {array}   groupIds         群ID数组
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.getGroupList = (groupIds) => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path= config.wxPath.getGroupContact+'?type=ex&r='+ new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket;
-    config.options.method='POST';
-    var Lists=new Array();
-    for(var i=0;i<groupIds.length;i++){
-      var list = {
-        UserName : groupIds[i],
-        EncryChatRoomId : ''
-      };
-      Lists.push(list);
-    }
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        },
-        Count : groupIds.length,
-        List : Lists
-    };
-    config.params = JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length,
-      'Cookie': config.wxCookie
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 消息检查
- *
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.syncCheck = () => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.check_host;
-    var key ="";
-    var keys=config.syncKey.List;
-    for(var o in keys){
-      key = key +'|'+keys[o].Key+'_'+keys[o].Val;
-    }
-    if(key.length>1){
-      key = key.substr(1,key.length);
-    }
-    config.data= {
-      uin : config.wxConfig.wxuin,
-      sid : config.wxConfig.wxsid,
-      skey : config.wxConfig.skey,
-      synckey : key,
-      deviceid : deviceID,
-      _ : new Date().getTime(),
-      r : new Date().getTime()
-    };
-    config.options.path=config.wxPath.syncCheck+'?r='+ new Date().getTime()+'&uin='+config.wxConfig.wxuin +'&sid='
-    +config.wxConfig.wxsid +'&skey='+config.wxConfig.skey +'&deviceid='+deviceID +'&_='+new Date().getTime()+'&synckey='+key;
-    config.options.method='GET';
-    config.params=JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length,
-      'Cookie': config.wxCookie
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 获取消息同步
- *
- * @param    {string}  address     地址
- * @param    {array}   com         商品数组
- * @param    {string}  pay_status  支付方式
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.webWxSync = () => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path=config.wxPath.webWxSync+'?sid='+config.wxConfig.wxsid+'&pass_ticket='+config.wxConfig.pass_ticket+'&skey='+config.wxConfig.skey;
-    config.options.method='POST';
-    //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
-    var rr=new Date().getTime();
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        },
-        SyncKey : config.syncKey,
-        rr : ~rr
-    };
-    config.params = JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length,
-      'Cookie': config.wxCookie
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 创建聊天组
- *
- * @param    {string}   topic         是否置顶
- * @param    {array}   memberList         用户数组
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.createChatRoom = (topic,memberList) => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path=config.wxPath.createChatRoom+'?lang=zh_CN&r='+ new Date().getTime()+'&pass_ticket='+config.wxConfig.pass_ticket;
-    config.options.method='POST';
-
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        },
-        Topic : topic,
-        MemberCount : memberList.length,
-        MemberList : memberList
-    };
-    config.params = JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length,
-      'Cookie': config.wxCookie
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 修改聊天组
- *
- * @param    {string}   chatRoomUserName         群Id
- * @param    {array}   memberList         用户数组
- * @returns  void
- *
- * @date     2017-06-28
- * @author   MrPan<www.mrpann.cn>
- */
-exports.updateChatRoom = (chatRoomUserName,memberList,fun) => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path=config.wxPath.updateChatRoom+'?fun='+fun+'&r='+ new Date().getTime();
-    config.options.method='POST';
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        },
-        ChatRoomName : ChatRoomName
-    };
-    if(fun == 'addmember'){
-      config.data.AddMemberList = memberList;
-    }else if(fun == 'delmember'){
-      config.data.DelMemberList = memberList;
-    }else if(fun == 'invitemember'){
-      config.data.InviteMemberList = memberList;
-    }
-    config.params = JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length,
-      'Cookie': config.wxCookie
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 获取头像
- *
- * @param    {string}   username         用户名
- * @returns  void
- *
- * @date     2017-06-30
- * @author   MrPan<www.mrpann.cn>
- */
-exports.getHeadImg = (username) => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path=config.wxPath.wxGetHeadImg+'?username='+username+'&skey='+config.wxConfig.skey;
-    config.options.method='GET';
-    //var id="e"+ (''+Math.random().toFixed(15)).substring(2, 17);
-    var rr=new Date().getTime();
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        },
-        SyncKey : config.syncKey,
-        rr : ~rr
-    };
-    config.params = JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 消息撤回
- *
- * @param    {string}   msgId         消息Id
- * @param    {string}   toId         发送Id
- * @returns  void
- *
- * @date     2017-06-30
- * @author   MrPan<www.mrpann.cn>
- */
-exports.revokeMsg = (msgId,toId) => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    config.options.path=config.wxPath.wxRevokeMsg+'?r='+ new Date().getTime();
-    config.options.method='POST';
-    var id=(+new Date + Math.random().toFixed(3)).replace('.', '');
-    config.data={
-        BaseRequest : {
-          Uin : config.wxConfig.wxuin,
-          Sid : config.wxConfig.wxsid,
-          Skey : config.wxConfig.skey,
-          DeviceID : deviceID
-        },
-        ToUserName : toId,
-        SvrMsgId : msgId,
-        ClientMsgId : id
-    };
-    config.params = JSON.stringify(config.data);
-    config.options.headers = {
-      'Content-Type': 'application/json;charset=utf-8',
-      'Content-Length':config.params.length
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/**
- * 推送登陆
- *
- * @param    {string}   uin         uin
- * @returns  void
- *
- * @date     2017-06-30
- * @author   MrPan<www.mrpann.cn>
- */
- exports.pushLogin = (uin) => {
-  return new Promise((resolve,reject) => {
-    config.options.hostname=config.wxHost.main_host;
-    if(uin){
-      config.options.path=config.wxPath.wxPushLoginUrl+'?uin='+uin
-    }else{
-      config.options.path=config.wxPath.wxPushLoginUrl+'?uin='+config.wxConfig.wxuin
-    }
-    config.options.path=config.wxPath.wxPushLoginUrl+'?uin='+uin
-    config.options.method='GET';
-    config.params = "";
-    config.options.headers = {
-    };
-    requestHttps(resolve,reject);
-  });
-}
-
-/*基本网络请求*/
-function requestHttps(resolve,reject){
-  var req = http.request(config.options, function (res) {
-    res.setEncoding('utf-8');
-    var headers=res.headers;
-    var responseString = '';
-    var cookie=headers['set-cookie'];
-    res.on('data', function (chunk) { 
-        responseString += chunk;
-    });  
-    res.on('end', function() {
-      var statusCode = res.statusCode;
-      if(statusCode == 200){
-        resolve(responseString,cookie);
+  restart(){
+    debug('微信重启...')
+    return this._init().catch(err => {
+      if(err.response){
+        throw err
       }else{
-        reject(responseString);
-      }      
-    });
-  });
-  req.on('error', function (e) {  
-      reject(e);
-  });
-  req.write(config.params+"\n");
-  req.end();
+        let err =new Error('重启出错,一分钟后重启')
+        debug(err)
+        this.emit('error',err)
+        return new Promise(resolve => {
+          setTimeout(resolve,60*1000)
+        }).then(() => this.init())
+      }
+    }).catch(err => {
+      debug(err)
+      this.emit('error',err)
+      this.stop()
+    })
+  }
+
+  stop () {
+    debug('微信登出...')
+    clearTimeout(this.retryPollingId)
+    clearTimeout(this.checkPollingId)
+    this.logout()
+    this.state = this.conf.STATE.logout
+    this.emit('logout')
+  }
+
+  //登录方法
+  _login () {
+    const checkLogin = () => {
+      return this.checkLogin().then(result => {
+        if(result.code === 201 && result.userAvatar){
+          this.emit('user-avatar',result.userAvatar)
+        }
+        if(result.code !== 200){
+          debug('登录方法(checkLogin):',result.code)
+          return checkLogin()
+        }else{
+          return result
+        }
+      })
+    }
+    return this.getUUID().then(uuid => {
+      debug('getUUID: ',uuid)
+      this.emit('uuid',uuid)
+      this.state =this.conf.STATE.uuid
+      return checkLogin()
+    }).then(result => {
+      debug('checkLogin:',res.redirect_uri)
+      return this.login()
+    })
+  }
+
+  //初始化方法
+  _init(){
+    return this.init().then(() => {
+      this.notifyStates()
+      .catch(err => this.emit('error',err))
+      this._getContact().then(contact => {
+        debug('获取联系人数量共：',contacts.length)
+        this.updateContacts(contacts);
+      })
+      this.state = this.conf.STATE.login
+      this.lastSyncTime = Date.now()
+      this.syncPolling()
+      this.checkPolling()
+      this.emit('login')
+    })
+  }
+
+  //获取联系人
+  _getContact(Seq = 0){
+    let contacts = [] 
+    return this.getContact(Seq).then(result => {
+      contacts = result.MemberList || []
+      if(result.Seq){
+        return this._getContact(res.Seq).then(_contacts => contacts = contacts.concat(_contacts || []))
+      }
+    }).then(() => {
+      if(Seq == 0){
+        let emptyGroup = contacts.filter(contact => contact.UserName.startsWith('@@') && contact.MemberCount == 0)
+        if(emptyGroup.length !=0){
+          return this.batchGetContact(emptyGroup).then(_contacts => contacts = contacts.concat(_contacts || []))
+        }
+      }else{
+        return contacts;
+      }
+    }).catch(err => {
+      this.emit('error',err)
+      return contacts
+    })
+  }
+
+  //同步
+  syncThreading(id = ++this.syncThreadingId){
+    if(this.state !== this.conf.STATE.login || this.syncThreadingId !== id){
+      return
+    }
+    this.syncCheck().then(selector => {
+      debug('获取消息状态：',selector)
+      if(+selector !== this.conf.SYNCCHECK_SELECTOR_NORMAL){
+        return this.sync().then(data => {
+          this.syncErrorCount = 0;
+          this.handleSync(data)
+        })
+      }
+    })
+  }
+
+  updateContacts(contacts){
+    if(!contacts || contacts.length == 0){
+      return
+    }
+    contacts.forEach(contact => {
+      if(this.contacts[contact.UserName]){
+        let oldContact =this.contacts[contact.UserName]
+        for(let i in contact){
+          contact[i] || delete contact[i]
+        }
+        Object.assign(oldContact,contact)
+        this.Contact.extend(oldContact)
+      }else{
+        this.contacts[contact.UserName] = this.Contact.extend(contact)
+      }
+    })
+    this.emit('contacts-updated',contacts)
+  }
+
+
+
+
 }
 
-exports.qrCodeType = 'cmd';
+Wechat.STATE = getCONF().STATE
+
+exports = module.exports = Wechat

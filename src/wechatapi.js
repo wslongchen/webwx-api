@@ -1,5 +1,4 @@
-﻿#!/usr/bin/env node
-// 导入基本模块
+﻿// 导入基本模块
 var http = require('https');  
 var fs = require('fs');
 var request = require('request');

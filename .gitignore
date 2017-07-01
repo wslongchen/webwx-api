@@ -25,6 +25,7 @@ public/js/ckeditor
 # OSX
 # =========================
 
+lib
 .DS_Store
 .AppleDouble
 .LSOverride
