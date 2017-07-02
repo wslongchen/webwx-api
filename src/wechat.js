@@ -26,8 +26,8 @@ class Wechat extends wxCore {
     this.lastSyncTime = 0
     this.syncThreadingId = 0
     this.syncErrorCount = 0
-    this.checkPollingId = 0
-    this.retryPollingId = 0
+    this.checkThreadingId = 0
+    this.retryThreadingId = 0
   }
 
   start(){
@@ -57,8 +57,8 @@ class Wechat extends wxCore {
 
   stop () {
     debug('微信登出...')
-    clearTimeout(this.retryPollingId)
-    clearTimeout(this.checkPollingId)
+    clearTimeout(this.retryThreadingId)
+    clearTimeout(this.checkThreadingId)
     this.logout()
     this.state = this.conf.STATE.logout
     this.emit('logout')
@@ -85,7 +85,7 @@ class Wechat extends wxCore {
       this.state =this.conf.STATE.uuid
       return checkLogin()
     }).then(result => {
-      debug('checkLogin:',res.redirect_uri)
+      debug('checkLogin:',result.redirect_uri)
       return this.login()
     })
   }
@@ -95,14 +95,14 @@ class Wechat extends wxCore {
     return this.init().then(() => {
       this.notifyStates()
       .catch(err => this.emit('error',err))
-      this._getContact().then(contact => {
+      this._getContact().then(contacts => {
         debug('获取联系人数量共：',contacts.length)
         this.updateContacts(contacts);
       })
       this.state = this.conf.STATE.login
       this.lastSyncTime = Date.now()
-      this.syncPolling()
-      this.checkPolling()
+      this.syncThreading()
+      this.checkThreading()
       this.emit('login')
     })
   }
@@ -113,7 +113,7 @@ class Wechat extends wxCore {
     return this.getContact(Seq).then(result => {
       contacts = result.MemberList || []
       if(result.Seq){
-        return this._getContact(res.Seq).then(_contacts => contacts = contacts.concat(_contacts || []))
+        return this._getContact(result.Seq).then(_contacts => contacts = contacts.concat(_contacts || []))
       }
     }).then(() => {
       if(Seq == 0){
@@ -143,7 +143,79 @@ class Wechat extends wxCore {
           this.handleSync(data)
         })
       }
+    }).then(() => {
+      this.lastSyncTime = Date.now()
+      this.syncThreading(id)
+    }).catch(err => {
+      if (this.state !== this.conf.STATE.login) {
+        return
+      }
+      debug(err)
+      this.emit('error', err)
+      if (++this.syncErrorCount > 2) {
+        let err = new Error(`连续${this.syncErrorCount}次同步失败，5s后尝试重启`)
+        debug(err)
+        this.emit('error', err)
+        clearTimeout(this.retryThreadingId)
+        setTimeout(() => this.restart(), 5 * 1000)
+      } else {
+        clearTimeout(this.retryThreadingId)
+        this.retryThreadingId = setTimeout(() => this.syncThreading(id), 2000 * this.syncErrorCount)
+      }
     })
+  }
+
+  checkThreading () {
+    if (this.state !== this.conf.STATE.login) {
+      return
+    }
+    let interval = Date.now() - this.lastSyncTime
+    if (interval > 1 * 60 * 1000) {
+      let err = new Error(`状态同步超过${interval / 1000}s未响应，5s后尝试重启`)
+      debug(err)
+      this.emit('error', err)
+      clearTimeout(this.checkThreadingId)
+      setTimeout(() => this.restart(), 5 * 1000)
+    } else {
+      debug('心跳')
+      this.notifyStates()
+      .catch(err => {
+        debug(err)
+        this.emit('error', err)
+      })
+      this.sendMsg(this._getThreadingMessage(), this._getThreadingTarget())
+      .catch(err => {
+        debug(err)
+        this.emit('error', err)
+      })
+      clearTimeout(this.checkThreadingId)
+      this.checkThreadingId = setTimeout(() => this.checkThreading(), this._getThreadingInterval())
+    }
+  }
+
+  sendMsg (msg, toUserName) {
+    if (typeof msg !== 'object') {
+      return this.sendText(msg, toUserName)
+    } else if (msg.emoticonMd5) {
+      return this.sendEmoticon(msg.emoticonMd5, toUserName)
+    } else {
+      return this.uploadMedia(msg.file, msg.filename, toUserName)
+        .then(res => {
+          switch (res.ext) {
+            case 'bmp':
+            case 'jpeg':
+            case 'jpg':
+            case 'png':
+              return this.sendPic(res.mediaId, toUserName)
+            case 'gif':
+              return this.sendEmoticon(res.mediaId, toUserName)
+            case 'mp4':
+              return this.sendVideo(res.mediaId, toUserName)
+            default:
+              return this.sendDoc(res.mediaId, res.name, res.size, res.ext, toUserName)
+          }
+        })
+    }
   }
 
   updateContacts(contacts){
@@ -165,6 +237,77 @@ class Wechat extends wxCore {
     this.emit('contacts-updated',contacts)
   }
 
+  handleSync (data) {
+    if (!data) {
+      this.restart()
+      return
+    }
+    if (data.AddMsgCount) {
+      debug('syncThreading messages count: ', data.AddMsgCount)
+      //this.handleMsg(data.AddMsgList)
+    }
+    if (data.ModContactCount) {
+      debug('syncThreading ModContactList count: ', data.ModContactCount)
+      //this.updateContacts(data.ModContactList)
+    }
+  }
+
+  handleMsg (data) {
+    data.forEach(msg => {
+      Promise.resolve().then(() => {
+        if (!this.contacts[msg.FromUserName] ||
+          (msg.FromUserName.startsWith('@@') && this.contacts[msg.FromUserName].MemberCount == 0)) {
+          return this.batchGetContact([{
+            UserName: msg.FromUserName
+          }]).then(contacts => {
+            this.updateContacts(contacts)
+          }).catch(err => {
+            debug(err)
+            this.emit('error', err)
+          })
+        }
+      }).then(() => {
+        msg = this.Message.extend(msg)
+        this.emit('message', msg)
+        if (msg.MsgType === this.conf.MSGTYPE_STATUSNOTIFY) {
+          let userList = msg.StatusNotifyUserName.split(',').filter(UserName => !this.contacts[UserName])
+          .map(UserName => {
+            return {
+              UserName: UserName
+            }
+          })
+          Promise.all(_.chunk(userList, 50).map(list => {
+            return this.batchGetContact(list).then(res => {
+              debug('batchGetContact data length: ', res.length)
+              this.updateContacts(res)
+            })
+          })).catch(err => {
+            debug(err)
+            this.emit('error', err)
+          })
+        }
+        if (msg.ToUserName === 'filehelper' && msg.Content === '退出wechat4u' ||
+          /^(.\udf1a\u0020\ud83c.){3}$/.test(msg.Content)) {
+          this.stop()
+        }
+      }).catch(err => {
+        this.emit('error', err)
+        debug(err)
+      })
+    })
+  }
+
+  _getThreadingMessage () { // Default Threading message
+    return '心跳：' + new Date().toLocaleString()
+  }
+
+  _getThreadingInterval () { // Default Threading interval
+    return 5 * 60 * 1000
+  }
+
+  _getThreadingTarget () { // Default Threading target user
+    return 'filehelper'
+  }
 
 
 

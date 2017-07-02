@@ -45,6 +45,12 @@ bot.on('login', () => {
 	console.log('登录了')
 })
 
+/**
+ * 如何处理会话消息
+ */
+bot.on('message', msg => {
+  console.log(msg)
+})
 
 /**
  * 错误事件，参数一般为Error对象

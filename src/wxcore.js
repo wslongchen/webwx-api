@@ -133,14 +133,18 @@ export default class wxCore {
     })
   }
 
-  notifyStates(){
+  notifyStates(to){
     let params = {
       pass_ticket : this.prop.pass_ticket,
       lang : 'zh_CN',
     }
+    let clientMsgId = getClientMsgId()
     let data = {
       'BaseRequest' : this.getBaseRequest(),
       'Code' : to ? 1 : 3,
+      'FromUserName' : this.user.UserName,
+      'ToUserName' : this.user.UserName,
+      'ClientMsgId' : clientMsgId,
     }
     let options = {
       method : 'POST',
@@ -160,6 +164,33 @@ export default class wxCore {
     })
   }
 
+  getContact (seq = 0) {
+    return Promise.resolve().then(() => {
+      let params = {
+        'lang': 'zh_CN',
+        'pass_ticket': this.prop.pass_ticket,
+        'seq': seq,
+        'skey': this.prop.skey,
+        'r': +new Date()
+      }
+      let options = {
+        method: 'POST',
+        url: this.conf.API_webwxgetcontact,
+        params: params
+      }
+      return this.request(options).then(result => {
+        let data = result.data
+        assert.equal(data.BaseResponse.Ret, 0, result)
+
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.tips = '获取通讯录失败'
+      throw err
+    })
+  }
+
   batchGetContact(contacts){
     let params = {
       'pass_ticket' : this.prop.pass_ticket,
@@ -169,8 +200,14 @@ export default class wxCore {
     }
     let data = {
       'BaseRequest' : this.getBaseRequest(),
-      'Count' : contacts,
-      'List' : contacts
+      'Count' : contacts.length,
+      'List' : contacts,
+    }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxbatchgetcontact,
+      params: params,
+      data: data,
     }
     return Promise.resolve().then(() => {
       return this.request(options).then(result => {
@@ -203,13 +240,14 @@ export default class wxCore {
           this.prop.pass_ticket = result.data.match(/<pass_ticket>(.*)<\/pass_ticket>/)[1]
         }
         if(result.headers['set-cookie']){
-          result.headers['set-cookie'].forEach(item => {
-            if(/webwx.*?data.*?ticket/i.test(item)){
-              this.prop.wxDataTicket = item.match(/=(.*?);/)[1]
-            }else if(/wxuin/i.test(item)){
-              this.prop.sid = item.match(/=(.*?);/)[1]
-            }
-          })
+          this.cookie = result.headers['set-cookie']
+          // result.headers['set-cookie'].forEach(item => {
+          //   if(/webwx.*?data.*?ticket/i.test(item)){
+          //     this.prop.wxDataTicket = item.match(/=(.*?);/)[1]
+          //   }else if(/wxuin/i.test(item)){
+          //     this.prop.sid = item.match(/=(.*?);/)[1]
+          //   }
+          // })
         }
       })
     }).catch(err => {
@@ -261,12 +299,18 @@ export default class wxCore {
       'SyncKey' : this.prop.syncKey,
       'rr' : ~new Date()
     }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxsync,
+      params: params,
+      data: data,
+    }
     return Promise.resolve().then(() => {
       return this.request(options).then(result => {
         let data =result.data
         assert.equal(data.BaseResponse.Ret,0,result)
         this.updateSyncKey(data)
-        THIS.prop.skey = data.SKey || this.prop.skey
+        this.prop.skey = data.SKey || this.prop.skey
         return data
       })
     }).catch(err => {
@@ -508,9 +552,9 @@ export default class wxCore {
     if(data.SyncKey){
       this.prop.syncKey =data.SyncKey
     }
-    if(data.SyncCheckKey){
+    if(data.SyncKey){
       let synckeylist =[]
-      for(let e = data.SyncCheckKey.List, o = 0,n = e.length;n > o; o++){
+      for(let e = data.SyncKey.List, o = 0,n = e.length;n > o; o++){
         synckeylist.push(e[o]['Key'] + '_' + e[o]['Val'])
       }
       this.prop.syncKeyStr = synckeylist.join('|')
