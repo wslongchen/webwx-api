@@ -244,11 +244,11 @@ class Wechat extends wxCore {
     }
     if (data.AddMsgCount) {
       debug('syncThreading messages count: ', data.AddMsgCount)
-      //this.handleMsg(data.AddMsgList)
+      this.handleMsg(data.AddMsgList)
     }
     if (data.ModContactCount) {
       debug('syncThreading ModContactList count: ', data.ModContactCount)
-      //this.updateContacts(data.ModContactList)
+      this.updateContacts(data.ModContactList)
     }
   }
 

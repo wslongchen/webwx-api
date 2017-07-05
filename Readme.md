@@ -35,8 +35,19 @@ or
       //do something
   });
 ```
+or
+```js
+    wechat.start
+    bot.on('uuid', uuid => {
+      qrcode.generate('https://login.weixin.qq.com/l/' + uuid, {
+        small: false
+      })
+      console.log('二维码链接：', 'https://login.weixin.qq.com/qrcode/' + uuid)
+    })
+    events：uuid，user-avatar，login，logout，contacts-updated，message，error
+```
 
-+ Run wxbot.js or webwx test, which contains the basic functions and cases.And You can run webwx -h for help
++ Run wxbot.js,bot.js or webwx test, which contains the basic functions and cases.And You can run webwx -h for help
 ```bash	
     node wxbox.js
 ```
@@ -44,7 +55,11 @@ or
 ```bash	
     webwx test
 ```
-+ More methods, contents, and method names can be viewed in wechatapi.js and wxapi.js.
+or
+```bash
+    node bot.js
+```
++ More methods, contents, and method names can be viewed in wechatapi.js , wxapi.js and wechat.js.
 
 # Updates
 

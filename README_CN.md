@@ -37,8 +37,18 @@
       //do something
   });
 ```
+或者
+```js
+    wechat.start
+    bot.on('uuid', uuid => {
+      qrcode.generate('https://login.weixin.qq.com/l/' + uuid, {
+        small: false
+      })
+      console.log('二维码链接：', 'https://login.weixin.qq.com/qrcode/' + uuid)
+    })
+```
 
-运行wxbot.js文件或者运行webwx test,案例中包含基本的方法与功能。运行webwx -h获取帮助。
+运行wxbot.js，bot.js文件或者运行webwx test,案例中包含基本的方法与功能。运行webwx -h获取帮助。
 ```bash
 	node wxbox.js
 ```
@@ -46,7 +56,11 @@
 ```bash
 	webwx test
 ```
-更多的方法、接口名可以在wechatapi.js以及wxapi.js中查看.
+或者
+```bash
+    node bot.js
+```
+更多的方法、接口名可以在wechatapi.js、wxapi.js以及wechat.js中查看.
 
 # 更新
 

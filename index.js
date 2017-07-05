@@ -2,4 +2,5 @@
 module.exports = require('./src/wechatapi');
 module.exports = require('./libs/core/config');
 module.exports = require('./src/wxapi');
+module.exports = require('./src/wechat');
 module.exports = require('./wxbot');
