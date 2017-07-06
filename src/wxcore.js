@@ -128,7 +128,7 @@ export default class wxCore {
         this.prop.skey = data.SKey || this.prop.skey
         this.updateSyncKey(data)
         Object.assign(this.user,data.User)
-        return this.user
+        return data
       })
     })
   }
@@ -186,7 +186,7 @@ export default class wxCore {
       })
     }).catch(err => {
       debug(err)
-      err.tips = '获取通讯录失败'
+      err.msg = '获取通讯录失败'
       throw err
     })
   }

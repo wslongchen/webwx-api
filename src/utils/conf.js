@@ -221,5 +221,6 @@ export function getCONF (host) {
   conf.API_webwxoplog = origin + '/cgi-bin/mmwebwx-bin/webwxoplog'
   conf.API_checkupload = origin + '/cgi-bin/mmwebwx-bin/webwxcheckupload'
   conf.API_webwxrevokemsg = origin + '/cgi-bin/mmwebwx-bin/webwxrevokemsg'
+  conf.API_tulingBot = 'http://www.tuling123.com/openapi/api'
   return Object.assign(conf, CONF)
 }

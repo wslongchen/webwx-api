@@ -6,6 +6,7 @@ import _ from 'lodash'
 import {
   getCONF,
   isStandardBrowserEnv,
+  assert,
 } from './utils'
 
 import ContactFactory from './interface/contact'
@@ -28,13 +29,16 @@ class Wechat extends wxCore {
     this.syncErrorCount = 0
     this.checkThreadingId = 0
     this.retryThreadingId = 0
+    this.tulingKey = ""
   }
 
+  //启动
   start(){
     debug('微信启动...')
     return this._login().then(() => this._init())
   }
 
+  //重启
   restart(){
     debug('微信重启...')
     return this._init().catch(err => {
@@ -55,6 +59,7 @@ class Wechat extends wxCore {
     })
   }
 
+  //关闭
   stop () {
     debug('微信登出...')
     clearTimeout(this.retryThreadingId)
@@ -92,7 +97,8 @@ class Wechat extends wxCore {
 
   //初始化方法
   _init(){
-    return this.init().then(() => {
+    return this.init().then(result => {
+      this.updateContacts(result.ContactList)
       this.notifyStates()
       .catch(err => this.emit('error',err))
       this._getContact().then(contacts => {
@@ -165,6 +171,7 @@ class Wechat extends wxCore {
     })
   }
 
+  //检查线程
   checkThreading () {
     if (this.state !== this.conf.STATE.login) {
       return
@@ -193,6 +200,7 @@ class Wechat extends wxCore {
     }
   }
 
+  //发送消息
   sendMsg (msg, toUserName) {
     if (typeof msg !== 'object') {
       return this.sendText(msg, toUserName)
@@ -218,6 +226,7 @@ class Wechat extends wxCore {
     }
   }
 
+  //更新联系人
   updateContacts(contacts){
     if(!contacts || contacts.length == 0){
       return
@@ -237,6 +246,7 @@ class Wechat extends wxCore {
     this.emit('contacts-updated',contacts)
   }
 
+  //处理同步
   handleSync (data) {
     if (!data) {
       this.restart()
@@ -252,6 +262,7 @@ class Wechat extends wxCore {
     }
   }
 
+  //处理消息
   handleMsg (data) {
     data.forEach(msg => {
       Promise.resolve().then(() => {
@@ -294,6 +305,34 @@ class Wechat extends wxCore {
         this.emit('error', err)
         debug(err)
       })
+    })
+  }
+
+  //图灵机器人
+  replyMessageByTuling(msg,toUserName){
+    let data = {
+      'key' : this.tulingKey,
+      'info' : msg,
+    }
+    let options = {
+      method : 'POST',
+      url : this.conf.API_tulingBot,
+      data : data,
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(result => {
+        let data =result.data
+        assert.equal(data.code,100000,result)
+        if(data.code == 100000){
+
+        }else if(data.code == 2000){
+
+        }
+        return this.sendMsg(data.text)
+      })
+    }).catch(err => {
+      err.msg = '图灵机器人加载失败'
+      throw err
     })
   }
 
