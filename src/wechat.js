@@ -177,7 +177,7 @@ class Wechat extends wxCore {
       return
     }
     let interval = Date.now() - this.lastSyncTime
-    if (interval > 1 * 60 * 1000) {
+    if (interval > 5 * 60 * 1000) {
       let err = new Error(`状态同步超过${interval / 1000}s未响应，5s后尝试重启`)
       debug(err)
       this.emit('error', err)
@@ -190,11 +190,11 @@ class Wechat extends wxCore {
         debug(err)
         this.emit('error', err)
       })
-      this.sendMsg(this._getThreadingMessage(), this._getThreadingTarget())
+      /*this.sendMsg(this._getThreadingMessage(), this._getThreadingTarget())
       .catch(err => {
         debug(err)
         this.emit('error', err)
-      })
+      })*/
       clearTimeout(this.checkThreadingId)
       this.checkThreadingId = setTimeout(() => this.checkThreading(), this._getThreadingInterval())
     }

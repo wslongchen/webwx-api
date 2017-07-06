@@ -1,4 +1,4 @@
-﻿'use strict'
+'use strict'
 // 导入基本模块
 require('babel-register')
 const Wechat = require('./src/wechat')
@@ -24,14 +24,9 @@ try {
  */
 if (bot.prop.uin) {
   // 存在登录数据时，可以随时调用restart进行重启
-  //bot.restart()
+  bot.restart()
 } else {
-  //bot.start()
-  bot.replyMessageByTuling('你好').then(result => {
-    console.log(result)
-  }).catch(err => {
-    console.log(err)
-  })
+  bot.start()
 }
 
 /**
@@ -48,13 +43,12 @@ bot.on('uuid', uuid => {
  * 联系人更新事件，参数为被更新的联系人列表
  */
 bot.on('contacts-updated', contacts => {
-  console.log(contacts)
   console.log('联系人数量：', Object.keys(bot.contacts).length)
 })
 
 
 bot.on('login', () => {
-	console.log('登录了')
+  console.log('登录了')
   fs.writeFileSync('./sync-data.json', JSON.stringify(bot.wxData))
 })
 
@@ -66,17 +60,20 @@ bot.on('message', msg => {
    * 获取消息时间
    */
    /* console.log(`[*]----------${msg.getDisplayTime()}----------`)*/
-   console.log('[*] 有新的消息，注意查收')
-   console.log('==============================')
-  /**
-   * 获取消息发送者的显示名
-   */
-  console.log('发送人：'+bot.contacts[msg.FromUserName].getDisplayName())
+   
+  
   /**
    * 判断消息类型
    */
   switch (msg.MsgType) {
-    case bot.CONF.MSGTYPE_TEXT:
+
+    case bot.conf.MSGTYPE_TEXT:
+    console.log('[*] 有新的消息，注意查收')
+    console.log('==============================')
+     /**
+     * 获取消息发送者的显示名
+     */
+    console.log(bot.contacts[msg.FromUserName])
       /**
        * 文本消息
        */
@@ -88,8 +85,9 @@ bot.on('message', msg => {
         //个人消息
         replySimpleMsg(msg.Content);
       }
+       console.log('==============================')
       break
-    case bot.CONF.MSGTYPE_IMAGE:
+    case bot.conf.MSGTYPE_IMAGE:
       /**
        * 图片消息
        */
@@ -100,7 +98,7 @@ bot.on('message', msg => {
         bot.emit('error', err)
       })*/
       break
-    case bot.CONF.MSGTYPE_VOICE:
+    case bot.conf.MSGTYPE_VOICE:
       /**
        * 语音消息
        */
@@ -111,7 +109,7 @@ bot.on('message', msg => {
         bot.emit('error', err)
       })*/
       break
-    case bot.CONF.MSGTYPE_EMOTICON:
+    case bot.conf.MSGTYPE_EMOTICON:
       /**
        * 表情消息
        */
@@ -122,8 +120,8 @@ bot.on('message', msg => {
         bot.emit('error', err)
       })*/
       break
-    case bot.CONF.MSGTYPE_VIDEO:
-    case bot.CONF.MSGTYPE_MICROVIDEO:
+    case bot.conf.MSGTYPE_VIDEO:
+    case bot.conf.MSGTYPE_MICROVIDEO:
       /**
        * 视频消息
        */
@@ -134,7 +132,7 @@ bot.on('message', msg => {
         bot.emit('error', err)
       })*/
       break
-    case bot.CONF.MSGTYPE_APP:
+    case bot.conf.MSGTYPE_APP:
       if (msg.AppMsgType == 6) {
         /**
          * 文件消息
@@ -151,7 +149,7 @@ bot.on('message', msg => {
     default:
       break
   }
-  console.log('==============================')
+ 
 })
 
 /**
@@ -178,6 +176,12 @@ bot.on('error', err => {
   console.error('错误：', err)
 })
 
+/*
+ * 回复个人消息
+ */
+function replySimpleMsg(msg){
+
+}
 
 /*
  * 回复群消息
