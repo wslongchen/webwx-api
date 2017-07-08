@@ -73,19 +73,28 @@ bot.on('message', msg => {
      /**
      * 获取消息发送者的显示名
      */
-    console.log(bot.contacts[msg.FromUserName])
+     if(bot.contacts[msg.FromUserName].isSelf){
+      //本人
+      console.log('回复消息给：'+bot.contacts[msg.ToUserName].NickName)
+     }else{
+      console.log('发送人：'+bot.contacts[msg.FromUserName].getDisplayName())
+     }
       /**
        * 文本消息
        */
-      console.log('消息内容：'+msg.Content)
+      let m=msg.Content.split(':\n')
+      
       if(msg.FromUserName.startsWith('@@')){
+        console.log('消息内容：'+m)
+        console.log('==============================')
         //群聊
         replyGroupMsg(msg.Content);
       }else{
+        console.log('消息内容：'+m)
+        console.log('==============================')
         //个人消息
         replySimpleMsg(msg.Content);
       }
-       console.log('==============================')
       break
     case bot.conf.MSGTYPE_IMAGE:
       /**
@@ -187,10 +196,36 @@ function replySimpleMsg(msg){
  * 回复群消息
  */
 function replyGroupMsg(msg){
-  let username =msg.match(/(\S*):/)[1]
-  let nickName = bot.Contact.getDisplayName(username);
+  console.log('[*] 自动回复群消息')
+  console.log('==============================')
   msg=unescape(msg.replace(/\u/g, "%u"))
-  let g_msg=msg.match(/<br\/>(\S*)/)[1]
+  let infos=msg.split(':\n')
+  if(infos.length>0){
+      let fromName = infos[0];
+      let nickName = fromName == undefined ? '陌生人' : fromName
+      if(infos[1].startsWith('@')){
+        let p=infos[1].replace("@","").split(' ')
+        if(p.length > 0){
+          let p_name = p[0]
+          if(p_name === bot.user.NickName){
+            //回复@自己的消息
+            console.log("@自己的消息["+nickName+"]:"+p[1])
+            //不是@自己，或者其它消息
+            bot.replyMessageByTuling(p[1]).catch(err => {
+              bot.emit('error', err)
+            })
+          }else{
+            //不是@自己，或者其它消息
+            
+          }
+        }
+      }else{
+          //正常消息
+           console.log('infos[1]:'+infos[1].replace("@","").replace(" ","").trim())
+           console.log(bot.user.NickName)
+      }
+    }
+  /*let g_msg=msg.match(/<br\/>(\S*)/)[1]
   if(g_msg.substr(0,1).trim()=='@'){
     let infos=g_msg.split(' ')
     console.log(infos)
@@ -210,5 +245,5 @@ function replyGroupMsg(msg){
           
   }else{
     console.log('收到群消息['+nickName+']:'+msg)
-  }
+  }*/
 }

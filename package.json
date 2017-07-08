@@ -1,8 +1,7 @@
 {
   "name": "webwx-api",
-  "version": "1.0.15",
   "description": "web wechat helper",
-  "main": "lib/wechat.js",
+  "main": "./lib/wechat.js",
   "bin": {
     "webwx": "./bin/webwx.js"
   },
@@ -16,6 +15,7 @@
   },
   "files": [
     "libs",
+    "lib",
     "bin",
     "src",
     "*.js"
@@ -58,7 +58,7 @@
     "replay": "^2.0.6",
     "request": "^2.79.0",
     "single-line-log": "latest",
-    "xmlreader": "latest"
+    "xmlreader": "^0.2.3"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",

@@ -304,8 +304,8 @@ function handle_msg(result){
 				}
 			}else if(msgType == 37){
 				//好友确认
-				wechatapi.verifyUser(toUserName,,function (data){
-
+				wechatapi.verifyUser(toUserName,function (data){
+					console('好友确认:'+data);
 				});
 			}
 			if(config.isDebug){

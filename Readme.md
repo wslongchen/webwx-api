@@ -13,43 +13,52 @@
 
 Can be installed with:
 ```bash
-    $ npm install webwx-api
-    $ npm link
+    $ npm install webwx-api --save
 ```
-and used:
-```js
-    var api = require('webwx-api');
-```
+
 ## Usage
-+ To use api.mothodName to create your own WeChat robot.
+
+2017-07-08 updated
+
++ Using the new version of API can be used
 ```js
-      wechatapi.getUUID(function (data){
-           //do something
-       });
+    const Wechat = require('webwx-api')
+    let w = new Wechat()
+    w.start()
+    w.on('uuid', uuid => {
+      console.log('二维码链接：', 'https://login.weixin.qq.com/qrcode/' + uuid)
+    })
+```
+Or use its specific methods directly
+```js
+    const Wechat = require('webwx-api/lib/wxcore')
+    //do something
+```
+
++ Using the older version of API, you can use the following
+```js
+    const oldapi = require('webwx-api/wxapiold');
+    oldapi.startBot();
+```
+
++ To use api.mothodName to create your own WeChat robot.
+```js 
+    oldapi.getUUID(function (data){
+        //do something
+    });
 ```
 or
 ```js
-  wechatapi.getUUID.then((resolve) =>{
+  oldapi.getUUID.then((resolve) =>{
       //do something
   },(reject) => {
       //do something
   });
 ```
-or
-```js
-    wechat.start
-    bot.on('uuid', uuid => {
-      qrcode.generate('https://login.weixin.qq.com/l/' + uuid, {
-        small: false
-      })
-      console.log('二维码链接：', 'https://login.weixin.qq.com/qrcode/' + uuid)
-    })
-    events：uuid，user-avatar，login，logout，contacts-updated，message，error
-```
 
 + Run wxbot.js,bot.js or webwx test, which contains the basic functions and cases.And You can run webwx -h for help
 ```bash	
-    node wxbox.js
+    node wxbot.js
 ```
 or
 ```bash	
@@ -68,7 +77,9 @@ or
 - Send text messages (to solve text encoding problems)
 - Add group chat, and pull people into the group
 - Refactoring the code, adding the ES6 style
-【1.0.14】 --17/07/01
+- solve the problem of compatibility between new and old API packages
+
+【1.0.18】 --17/07/08
 
 # Support
 

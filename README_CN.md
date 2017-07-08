@@ -15,42 +15,52 @@
 
 可以用以下命令安装:
 ```bash
-    $ npm install webwx-api
-    $ npm link
+    $ npm install webwx-api --save
 ```
-并且使用它:
-
-    var api = require('webwx-api');
 
 ## 使用
-使用api.方法名，创建你自己的回话
+
+2017-07-08 更新
+使用新版API可以用
+```js
+    const Wechat = require('webwx-api')
+    let w = new Wechat()
+    w.start()
+    w.on('uuid', uuid => {
+      console.log('二维码链接：', 'https://login.weixin.qq.com/qrcode/' + uuid)
+    })
+```
+或者直接使用其具体方法
+```js
+    const Wechat = require('webwx-api/lib/wxcore')
+    //do something
+```
+
+使用旧版API可以使用如下
+```js
+    const oldapi = require('webwx-api/wxapiold');
+    oldapi.startBot();
+```
+
+使用oldapi.方法名，创建你自己的回话
 ```js 
-    wechatapi.getUUID(function (data){
+    oldapi.getUUID(function (data){
         //do something
     });
 ```
 或者
 ```js
-  wechatapi.getUUID.then((resolve) =>{
+  oldapi.getUUID.then((resolve) =>{
       //do something
   },(reject) => {
       //do something
   });
 ```
-或者
-```js
-    wechat.start
-    bot.on('uuid', uuid => {
-      qrcode.generate('https://login.weixin.qq.com/l/' + uuid, {
-        small: false
-      })
-      console.log('二维码链接：', 'https://login.weixin.qq.com/qrcode/' + uuid)
-    })
-```
+
 
 运行wxbot.js，bot.js文件或者运行webwx test,案例中包含基本的方法与功能。运行webwx -h获取帮助。
 ```bash
-	node wxbox.js
+	node wxbot.js
 ```
 或者
 ```bash
@@ -69,7 +79,9 @@
 - 发送文字消息(解决文字编码问题)
 - 增加群聊，以及拉人入群
 - 重构了代码，加入es6风格
-【1.0.14】 --17/07/01
+- 解决新老API包兼容使用问题
+
+【1.0.18】 --17/07/08
 
 # 支持
 
@@ -90,7 +102,7 @@
 
 - [qrcode-terminal] by gtanner 
 - 问题参考 by [biezhi]
-
+- es6学习 by [wechat4u]
 
 [qrcode-terminal]: https://github.com/gtanner/qrcode-terminal
 [biezhi]: https://github.com/biezhi/wechat-robot
@@ -102,3 +114,4 @@
 [downloads-url]: https://npmjs.org/package/webwx-api
 [travis-img]: https://travis-ci.org/wslongchen/webwx-api.svg?branch=master
 [travis-url]: https://travis-ci.org/wslongchen/webwx-api
+[wechat4u]: https://github.com/nodeWechat
