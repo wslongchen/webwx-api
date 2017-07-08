@@ -13,6 +13,7 @@ let bot
  */
 try {
   bot = new Wechat(require('./sync-data.json'))
+  bot.tulingKey = 'f6a4b574b35b4da1aa1477ca193bb687';
 } catch (e) {
   bot = new Wechat()
   //配置图灵key
@@ -88,7 +89,7 @@ bot.on('message', msg => {
         console.log('消息内容：'+m)
         console.log('==============================')
         //群聊
-        replyGroupMsg(msg.Content);
+        replyGroupMsg(msg.Content,msg.FromUserName);
       }else{
         console.log('消息内容：'+m)
         console.log('==============================')
@@ -101,6 +102,7 @@ bot.on('message', msg => {
        * 图片消息
        */
       console.log('图片消息，暂时不保存')
+      console.log('==============================')
      /* bot.getMsgImg(msg.MsgId).then(res => {
         fs.writeFileSync(`./media/${msg.MsgId}.jpg`, res.data)
       }).catch(err => {
@@ -112,6 +114,7 @@ bot.on('message', msg => {
        * 语音消息
        */
       console.log('语音消息，暂时不保存')
+      console.log('==============================')
       /*bot.getVoice(msg.MsgId).then(res => {
         fs.writeFileSync(`./media/${msg.MsgId}.mp3`, res.data)
       }).catch(err => {
@@ -123,6 +126,7 @@ bot.on('message', msg => {
        * 表情消息
        */
       console.log('表情消息，暂时不保存')
+      console.log('==============================')
      /* bot.getMsgImg(msg.MsgId).then(res => {
         fs.writeFileSync(`./media/${msg.MsgId}.gif`, res.data)
       }).catch(err => {
@@ -135,6 +139,7 @@ bot.on('message', msg => {
        * 视频消息
        */
       console.log('视频消息，暂时不保存')
+      console.log('==============================')
       /*bot.getVideo(msg.MsgId).then(res => {
         fs.writeFileSync(`./media/${msg.MsgId}.mp4`, res.data)
       }).catch(err => {
@@ -147,6 +152,7 @@ bot.on('message', msg => {
          * 文件消息
          */
         console.log('文件消息，暂时不保存')
+        console.log('==============================')
         /*bot.getDoc(msg.FromUserName, msg.MediaId, msg.FileName).then(res => {
           fs.writeFileSync(`./media/${msg.FileName}`, res.data)
           console.log(res.type);
@@ -195,9 +201,7 @@ function replySimpleMsg(msg){
 /*
  * 回复群消息
  */
-function replyGroupMsg(msg){
-  console.log('[*] 自动回复群消息')
-  console.log('==============================')
+function replyGroupMsg(msg,toUserName){
   msg=unescape(msg.replace(/\u/g, "%u"))
   let infos=msg.split(':\n')
   if(infos.length>0){
@@ -209,20 +213,19 @@ function replyGroupMsg(msg){
           let p_name = p[0]
           if(p_name === bot.user.NickName){
             //回复@自己的消息
-            console.log("@自己的消息["+nickName+"]:"+p[1])
+            //console.log("@自己的消息["+nickName+"]:"+p[1])
             //不是@自己，或者其它消息
-            bot.replyMessageByTuling(p[1]).catch(err => {
+            bot.replyMessageByTuling(p[1],toUserName).catch(err => {
               bot.emit('error', err)
             })
           }else{
-            //不是@自己，或者其它消息
+            //不是@自己，或者其它消息不回复
             
           }
         }
       }else{
-          //正常消息
-           console.log('infos[1]:'+infos[1].replace("@","").replace(" ","").trim())
-           console.log(bot.user.NickName)
+          //正常消息不恢复
+
       }
     }
   /*let g_msg=msg.match(/<br\/>(\S*)/)[1]

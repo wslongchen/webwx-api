@@ -297,7 +297,7 @@ class Wechat extends wxCore {
             this.emit('error', err)
           })
         }
-        if (msg.ToUserName === 'filehelper' && msg.Content === '退出wechat4u' ||
+        if (msg.ToUserName === 'filehelper' && msg.Content === '退出' ||
           /^(.\udf1a\u0020\ud83c.){3}$/.test(msg.Content)) {
           this.stop()
         }
@@ -310,9 +310,11 @@ class Wechat extends wxCore {
 
   //图灵机器人
   replyMessageByTuling(msg,toUserName){
+    var id = toUserName.replace(/[&\|\\\*^%$#@\-]/g,"");
     let data = {
       'key' : this.tulingKey,
       'info' : msg,
+      'userid' : id,
     }
     let options = {
       method : 'POST',
@@ -322,13 +324,28 @@ class Wechat extends wxCore {
     return Promise.resolve().then(() => {
       return this.request(options).then(result => {
         let data =result.data
-        assert.equal(data.code,100000,result)
+        //assert.equal(data.code,100000,result)
         if(data.code == 100000){
+          //文本类
+          return this.sendMsg(data.text,toUserName)
+        
+        }else if(data.code == 200000){
+          //链接类标识码
+          let msg = data.text +' \n '+ data.url
+          return this.sendMsg(msg,toUserName)
 
-        }else if(data.code == 2000){
-
+        }else if(data.code == 302000){
+          //新闻类
+          let msg = data.text +' \n '
+          for (let key in data.list) {
+            msg = msg + data.list[key].article + ' \n '
+            msg = msg + data.llist[key].detailurl + ' \n '
+          }
+          return this.sendMsg(msg,toUserName)
+        }else if(data.code == 308000){
+          //菜谱类
         }
-        return this.sendMsg(data.text)
+        
       })
     }).catch(err => {
       err.msg = '图灵机器人加载失败'
