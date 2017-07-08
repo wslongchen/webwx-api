@@ -1,5 +1,6 @@
 {
   "name": "webwx-api",
+  "version": "1.0.18",
   "description": "web wechat helper",
   "main": "./lib/wechat.js",
   "bin": {
