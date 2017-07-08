@@ -202,30 +202,21 @@ function replySimpleMsg(msg){
  * 回复群消息
  */
 function replyGroupMsg(msg,toUserName){
-  msg=unescape(msg.replace(/\u/g, "%u"))
+  //msg=unescape(msg.replace(/\u/g, "%u"))
   let infos=msg.split(':\n')
   if(infos.length>0){
       let fromName = infos[0];
       let nickName = fromName == undefined ? '陌生人' : fromName
       if(infos[1].startsWith('@')){
-        let p=infos[1].replace("@","").split(' ')
-        if(p.length > 0){
-          let p_name = p[0]
-          if(p_name === bot.user.NickName){
-            //回复@自己的消息
-            //console.log("@自己的消息["+nickName+"]:"+p[1])
-            //不是@自己，或者其它消息
-            bot.replyMessageByTuling(p[1],toUserName).catch(err => {
+        if(infos[1].indexOf('@'+bot.user.NickName)>-1){
+          let m = infos[1].replace('@'+bot.user.NickName,'').replace(' ','').trim()
+            let space = infos[1].split('@'+bot.user.NickName)[1].substr(0,1);
+            bot.replyMessageByTuling(m,toUserName).catch(err => {
               bot.emit('error', err)
             })
-          }else{
-            //不是@自己，或者其它消息不回复
-            
-          }
         }
       }else{
           //正常消息不恢复
-
       }
     }
   /*let g_msg=msg.match(/<br\/>(\S*)/)[1]

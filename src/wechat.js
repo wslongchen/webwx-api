@@ -309,7 +309,7 @@ class Wechat extends wxCore {
   }
 
   //图灵机器人
-  replyMessageByTuling(msg,toUserName){
+  replyMessageByTuling(msg,toUserName,nickName){
     var id = toUserName.replace(/[&\|\\\*^%$#@\-]/g,"");
     let data = {
       'key' : this.tulingKey,
@@ -327,7 +327,8 @@ class Wechat extends wxCore {
         //assert.equal(data.code,100000,result)
         if(data.code == 100000){
           //文本类
-          return this.sendMsg(data.text,toUserName)
+          let msg = data.text
+          return this.sendMsg(msg,toUserName)
         
         }else if(data.code == 200000){
           //链接类标识码
