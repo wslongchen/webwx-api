@@ -97,7 +97,7 @@ bot.on('message', msg => {
         console.log('消息内容：'+m)
         console.log('==============================')
         //个人消息
-        replySimpleMsg(msg.Content);
+        replySimpleMsg(msg.Content,msg.FromUserName);
       }
       break
     case bot.conf.MSGTYPE_IMAGE:
@@ -178,6 +178,9 @@ bot.on('message', msg => {
     bot.verifyUser(msg.RecommendInfo.UserName, msg.RecommendInfo.Ticket)
       .then(res => {
         console.log(`通过了 ${bot.Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)
+        var message = "你好，我是小安安，如果您来自github，请输入相关羞羞的暗号，将你拉入指定群聊。\n\n\n\nWelcome to here, if you from Github, show me the code ,I will invited you to the group"
+        message += '\n\n\n\n当然，你也可以和我痛痛快快的聊一场不冷场的天。'
+        return bot.sendMsg(message,msg.RecommendInfo.UserName)
       })
       .catch(err => {
         bot.emit('error', err)
@@ -203,19 +206,35 @@ function replySimpleMsg(msg,toUserName){
   let manage = config.manageGroups.filter(function(item){
     return item.keyword === msg
   })
-  if(manage != undefined){
+  if(manage[0] != undefined){
     //关键字匹配
-    let group = bot.contacts.filter(function(item){
-        return item.Name === manage.Name
-    })
-    if(group != undefined){
-      //找到群聊，拉人进群聊
-      let memberList = [fromUser];
-      bot.updateChatroom(group.UserName,memberList,'invitemember')
+    let flag =false
+    for (let x in bot.contacts){
+      if(bot.contacts[x].NickName == manage[0].Name){
+        flag = true
+        //找到群聊，拉人进群聊
+        let memberList = new Array()
+        var u = { 'UserName' : toUserName }
+        memberList.push(u)
+        bot.updateChatroom(bot.contacts[x].UserName,memberList,'addmember').then(result => {
+          var message = "@"+fromUser.NickName+" 欢迎加入我们的大家庭！"
+          return bot.sendMsg(message,bot.contacts[x].UserName)
+        }).catch(err => {
+          bot.emit('error', err)
+        })
+      }
+    }
+    if(!flag){
+      //正常消息
+      bot.replyMessageByTuling(msg,toUserName).catch(err => {
+        bot.emit('error', err)
+      })
     }
   }else{
     //正常消息
-    
+    bot.replyMessageByTuling(msg,toUserName).catch(err => {
+      bot.emit('error', err)
+    })
   }
 }
 

@@ -655,19 +655,20 @@ export default class wxCore {
 
   updateChatroom(ChatRoomUserName, MemberList, fun){
     let params = {
-      fun: fun
+      'fun' : fun
     }
     let data = {
-      BaseRequest: this.getBaseRequest(),
-      ChatRoomName: ChatRoomUserName
+      'BaseRequest': this.getBaseRequest(),
+      'ChatRoomName': ChatRoomUserName
     }
     if (fun === 'addmember') {
-      data.AddMemberList = MemberList.toString()
+      data.AddMemberList = MemberList[0].UserName
     } else if (fun === 'delmember') {
-      data.DelMemberList = MemberList.toString()
+      data.DelMemberList = MemberList[0].UserName
     } else if (fun === 'invitemember') {
-      data.InviteMemberList = MemberList.toString()
+      data.InviteMemberList = MemberList[0].UserName
     }
+    console.log(MemberList.toString())
     let options = {
       method : 'POST',
       url : this.conf.API_webwxupdatechatroom,
@@ -677,6 +678,7 @@ export default class wxCore {
     return Promise.resolve().then(() => {
       return this.request(options).then(result => {
         let data =result.data
+        console.log(data)
         assert.equal(data.BaseResponse.Ret,0,result)
         return data
       })
