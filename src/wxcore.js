@@ -37,7 +37,7 @@ export default class wxCore {
     })
 
     if(data){
-      this.wx =data
+      this.wxData =data
     }
   }
 
@@ -548,6 +548,145 @@ export default class wxCore {
     })
   }
 
+  verifyUser(UserName,Ticket){
+    let params = {
+      'pass_ticket' : this.prop.pass_ticket,
+      'lang' : 'zh_CN',
+    }
+    let data = {
+      'BaseRequest' : this.getBaseRequest(),
+      'Opcode' : 3,
+      'VerifyUserListSize' : 1,
+      'VerifyUserList' : [{
+        'Value' : UserName,
+        'VerifyUserTicket' : Ticket
+      }],
+      'VerifyContent' : '',
+      'SceneListCount' : 1,
+      'SceneList' : [33],
+      'skey' : this.prop.skey,
+    }
+    let options = {
+      method : 'POST',
+      url : this.conf.API_webwxverifyuser,
+      params : params,
+      data : data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(result => {
+        let data =result.data
+        assert.equal(data.BaseResponse.Ret,0,result)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '通过好友请求失败'
+      throw err
+    })
+  }
+
+  addFriend(UserName,content = '我是' + this.user.NickName){
+    let params = {
+      'pass_ticket' : this.prop.pass_ticket,
+      'lang' : 'zh_CN'
+    }
+    let data = {
+      'BaseRequest' : this.getBaseRequest(),
+      'Opcode' : 2,
+      'VerifyUserListSize' : 1,
+      'VerifyUserList' : [{
+        'Value' : UserName,
+        'VerifyUserTicket' : ''
+      }],
+      'VerifyContent' : content,
+      'SceneListCount' : 1,
+      'SceneList' : [33],
+      'skey' : this.prop.skey,
+    }
+    let options = {
+      method : 'POST',
+      url : this.conf.API_webwxverifyuser,
+      params : params,
+      data : data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(result => {
+        let data =result.data
+        assert.equal(data.BaseResponse.Ret,0,result)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '添加好友失败'
+      throw err
+    })
+  }
+
+  createChatroom(Topic,MemberList){
+    let params = {
+      'pass_ticket' : this.prop.pass_ticket,
+      'lang' : 'zh_CN',
+      'r' : ~new Date()
+    }
+    let data = {
+      'BaseRequest' : this.getBaseRequest(),
+      'MemberCount' : MemberList.length,
+      'MemberList' : MemberList,
+      'Topic' : Topic,
+    }
+    let options = {
+      method : 'POST',
+      url : this.conf.API_webwxcreatechatroom,
+      params : params,
+      data : data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(result => {
+        let data =result.data
+        assert.equal(data.BaseResponse.Ret,0,result)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '创建群失败'
+      throw err
+    })
+  }
+
+  updateChatroom(ChatRoomUserName, MemberList, fun){
+    let params = {
+      fun: fun
+    }
+    let data = {
+      BaseRequest: this.getBaseRequest(),
+      ChatRoomName: ChatRoomUserName
+    }
+    if (fun === 'addmember') {
+      data.AddMemberList = MemberList.toString()
+    } else if (fun === 'delmember') {
+      data.DelMemberList = MemberList.toString()
+    } else if (fun === 'invitemember') {
+      data.InviteMemberList = MemberList.toString()
+    }
+    let options = {
+      method : 'POST',
+      url : this.conf.API_webwxupdatechatroom,
+      params : params,
+      data : data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(result => {
+        let data =result.data
+        assert.equal(data.BaseResponse.Ret,0,result)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '邀请或踢出群成员失败'
+      throw err
+    })
+  }
+
   updateSyncKey(data){
     if(data.SyncKey){
       this.prop.syncKey =data.SyncKey
@@ -565,6 +704,117 @@ export default class wxCore {
       }
       this.prop.syncKeyStr = synckeylist.join('|')
     }
+  }
+
+  opLog (UserName, OP, RemarkName) {
+    let params = {
+      pass_ticket: this.prop.pass_ticket
+    }
+    let data = {
+      BaseRequest: this.getBaseRequest(),
+      CmdId: 3,
+      OP: OP,
+      RemarkName: RemarkName,
+      UserName: UserName
+    }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxoplog,
+      params: params,
+      data: data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        let data = res.data
+        assert.equal(data.BaseResponse.Ret, 0, res)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '置顶或取消置顶失败'
+      throw err
+    })
+  }
+
+  updateRemarkName (UserName, RemarkName) {
+    let params = {
+      pass_ticket: this.prop.passTicket,
+      'lang': 'zh_CN'
+    }
+    let data = {
+      BaseRequest: this.getBaseRequest(),
+      CmdId: 2,
+      RemarkName: RemarkName,
+      UserName: UserName
+    }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxoplog,
+      params: params,
+      data: data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        let data = res.data
+        assert.equal(data.BaseResponse.Ret, 0, res)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '设置用户标签失败'
+      throw err
+    })
+  }
+
+  updateChatRoomName (ChatRoomUserName, NewName) {
+    let params = {
+      'fun': 'modtopic'
+    }
+    let data = {
+      BaseRequest: this.getBaseRequest(),
+      ChatRoomName: ChatRoomUserName,
+      NewTopic: NewName
+    }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxupdatechatroom,
+      params: params,
+      data: data
+    }
+    return Promise.resolve().then(() => {      
+      return this.request(options).then(res => {
+        console.log(JSON.stringify(res))
+        let data = res.data
+        assert.equal(data.BaseResponse.Ret, 0, res)
+      })
+    }).catch(err => {
+      debug(err)
+      throw new Error('更新群名失败')
+    })
+  }
+
+  revokeMsg (msgId, toUserName) {
+    let data = {
+      BaseRequest: this.getBaseRequest(),
+      SvrMsgId: msgId,
+      ToUserName: toUserName,
+      ClientMsgId: getClientMsgId()
+    }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxrevokemsg,
+      data: data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        let data = res.data
+        assert.equal(data.BaseResponse.Ret, 0, res)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      throw new Error('撤回消息失败')
+    })
   }
 
   getBaseRequest () {

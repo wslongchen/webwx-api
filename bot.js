@@ -6,6 +6,7 @@ const qrcode = require('qrcode-terminal')
 const fs = require('fs')
 const request = require('request')
 
+
 let bot
 /**
  * 尝试获取本地登录数据，免扫码
@@ -19,6 +20,7 @@ try {
   //配置图灵key
   bot.tulingKey = 'f6a4b574b35b4da1aa1477ca193bb687';
 }
+
 
 /**
  * 启动机器人
@@ -45,6 +47,7 @@ bot.on('uuid', uuid => {
  */
 bot.on('contacts-updated', contacts => {
   console.log('联系人数量：', Object.keys(bot.contacts).length)
+  fs.writeFileSync('./contacts.json', JSON.stringify(bot.contacts))
 })
 
 
@@ -194,8 +197,26 @@ bot.on('error', err => {
 /*
  * 回复个人消息
  */
-function replySimpleMsg(msg){
-
+function replySimpleMsg(msg,toUserName){
+  const config = require('./data.json')
+  let fromUser = bot.contacts[toUserName]
+  let manage = config.manageGroups.filter(function(item){
+    return item.keyword === msg
+  })
+  if(manage != undefined){
+    //关键字匹配
+    let group = bot.contacts.filter(function(item){
+        return item.Name === manage.Name
+    })
+    if(group != undefined){
+      //找到群聊，拉人进群聊
+      let memberList = [fromUser];
+      bot.updateChatroom(group.UserName,memberList,'invitemember')
+    }
+  }else{
+    //正常消息
+    
+  }
 }
 
 /*
