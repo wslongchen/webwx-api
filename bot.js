@@ -201,7 +201,8 @@ bot.on('error', err => {
  * 回复个人消息
  */
 function replySimpleMsg(msg,toUserName){
-  const config = require('./data.json')
+  //const config = require('./data.json')
+  let config = JSON.parse(fs.readFileSync('./data.json'))
   let fromUser = bot.contacts[toUserName]
   let manage = config.manageGroups.filter(function(item){
     return item.keyword === msg
