@@ -6,6 +6,9 @@
 
 > 一开始只是想用node做一个微信机器人，研究一下微信的网页版接口，后来深陷js无法自拔，用ES2015重新写了一份Promise风格的接口，然后越发觉得es6很厉害，用的很爽，紧接着有看到了wechat4u 的node项目，姿势学到了很多，希望，这个项目能够在某些地方帮助到你。
 
+可以扫描下方二维码添加小安安，并回复暗号[应垂丝汀]拉入指定交流群聊，赶紧加入我们吧。
+![Basic Example][qr-img]
+
 # Node 仓库
 
 ## 截图
@@ -107,6 +110,7 @@
 [qrcode-terminal]: https://github.com/gtanner/qrcode-terminal
 [biezhi]: https://github.com/biezhi/wechat-robot
 [example-img]: https://github.com/wslongchen/webwx-api/blob/master/screenshot.png
+[qr-img]: https://github.com/wslongchen/webwechat_api/blob/master/qr.JPG
 [readme-en]: https://github.com/wslongchen/webwx-api/blob/master/README.md
 [npm-image]: https://img.shields.io/npm/v/webwx-api.svg
 [npm-url]: https://npmjs.org/package/webwx-api
