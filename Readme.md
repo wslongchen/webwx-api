@@ -107,7 +107,7 @@ To setup the development envrionment run `npm install`
 [qrcode-terminal]: https://github.com/gtanner/qrcode-terminal
 [biezhi]: https://github.com/biezhi/wechat-robot
 [example-img]: https://github.com/wslongchen/webwechat_api/blob/master/screenshot.png
-[qr-img]: https://github.com/wslongchen/webwechat_api/blob/master/screenshot.png
+[qr-img]: https://github.com/wslongchen/webwx-api/blob/master/qr.JPG
 [docs-image]: https://img.shields.io/badge/文档-中文-blue.svg
 [docs-url]: https://github.com/wslongchen/webwx-api/blob/master/README_CN.md
 [npm-image]: https://img.shields.io/npm/v/webwx-api.svg
