@@ -5,6 +5,7 @@
 > Just want to do a WeChat robot node, the web version interface study of WeChat, later in JS can not extricate themselves, with ES2015 to write a Promise style interface, then I think ES6 is very powerful, with a cool, then see the wechat4u node project, learned a lot of posture this project, hope to be able to help you in some places.
 
 You can scan two-dimensional code below to add Ann, and reply to sign [应垂丝汀] Moore pull into the specified vertical communication group chat, come and join us.
+
 ![Basic Example][qr-img]
 
 # Node Library
