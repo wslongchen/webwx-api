@@ -207,6 +207,8 @@ class Wechat extends wxCore {
     } else if (msg.emoticonMd5) {
       return this.sendEmoticon(msg.emoticonMd5, toUserName)
     } else {
+      console.log(msg.filename)
+      console.log(1111111)
       return this.uploadMedia(msg.file, msg.filename, toUserName)
         .then(res => {
           switch (res.ext) {

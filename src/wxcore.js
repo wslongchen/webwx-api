@@ -3,6 +3,7 @@ import path from 'path'
 import _debug from 'debug'
 import FormData from 'form-data'
 import mime from 'mime'
+import bl from 'bl'
 import {
   getCONF,
   Request,
@@ -514,7 +515,7 @@ export default class wxCore {
               }
               return resolve({
                 data : buffer,
-                headers : from.getHeaders()
+                headers : form.getHeaders()
               })
             }))
           }
@@ -545,6 +546,331 @@ export default class wxCore {
         err.msg ='上传媒体文件失败'
         throw err
       })
+    })
+  }
+
+   sendPic (mediaId, to) {
+    let params = {
+      'pass_ticket': this.prop.passTicket,
+      'fun': 'async',
+      'f': 'json',
+      'lang': 'zh_CN'
+    }
+    let clientMsgId = getClientMsgId()
+    let data = {
+      'BaseRequest': this.getBaseRequest(),
+      'Scene': 0,
+      'Msg': {
+        'Type': this.conf.MSGTYPE_IMAGE,
+        'MediaId': mediaId,
+        'FromUserName': this.user.UserName,
+        'ToUserName': to,
+        'LocalID': clientMsgId,
+        'ClientMsgId': clientMsgId
+      }
+    }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxsendmsgimg,
+      params: params,
+      data: data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        let data = res.data
+        assert.equal(data.BaseResponse.Ret, 0, res)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '发送图片失败'
+      throw err
+    })
+  }
+
+  sendVideo (mediaId, to) {
+    let params = {
+      'pass_ticket': this.prop.passTicket,
+      'fun': 'async',
+      'f': 'json',
+      'lang': 'zh_CN'
+    }
+    let clientMsgId = getClientMsgId()
+    let data = {
+      'BaseRequest': this.getBaseRequest(),
+      'Scene': 0,
+      'Msg': {
+        'Type': this.conf.MSGTYPE_VIDEO,
+        'MediaId': mediaId,
+        'FromUserName': this.user.UserName,
+        'ToUserName': to,
+        'LocalID': clientMsgId,
+        'ClientMsgId': clientMsgId
+      }
+    }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxsendmsgvedio,
+      params: params,
+      data: data
+    }
+    return Promise.resolve().then(() => {  
+      return this.request(options).then(res => {
+        let data = res.data
+        assert.equal(data.BaseResponse.Ret, 0, res)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '发送视频失败'
+      throw err
+    })
+  }
+
+  sendDoc (mediaId, name, size, ext, to) {
+    let params = {
+      'pass_ticket': this.prop.passTicket,
+      'fun': 'async',
+      'f': 'json',
+      'lang': 'zh_CN'
+    }
+    let clientMsgId = getClientMsgId()
+    let data = {
+      'BaseRequest': this.getBaseRequest(),
+      'Scene': 0,
+      'Msg': {
+        'Type': this.conf.APPMSGTYPE_ATTACH,
+        'Content': `<appmsg appid='wxeb7ec651dd0aefa9' sdkver=''><title>${name}</title><des></des><action></action><type>6</type><content></content><url></url><lowurl></lowurl><appattach><totallen>${size}</totallen><attachid>${mediaId}</attachid><fileext>${ext}</fileext></appattach><extinfo></extinfo></appmsg>`,
+        'FromUserName': this.user.UserName,
+        'ToUserName': to,
+        'LocalID': clientMsgId,
+        'ClientMsgId': clientMsgId
+      }
+    }
+    let options = {
+      method: 'POST',
+      url: this.conf.API_webwxsendappmsg,
+      params: params,
+      data: data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        let data = res.data
+        assert.equal(data.BaseResponse.Ret, 0, res)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '发送文件失败'
+      throw err
+    })
+  }
+
+  forwardMsg (msg, to) {
+    let params = {
+      'pass_ticket': this.prop.passTicket,
+      'fun': 'async',
+      'f': 'json',
+      'lang': 'zh_CN'
+    }
+    let clientMsgId = getClientMsgId()
+    let data = {
+      'BaseRequest': this.getBaseRequest(),
+      'Scene': 2,
+      'Msg': {
+        'Type': msg.MsgType,
+        'MediaId': '',
+        'Content': msg.Content.replace(/&lt;/g, '<').replace(/&gt;/g, '>'),
+        'FromUserName': this.user.UserName,
+        'ToUserName': to,
+        'LocalID': clientMsgId,
+        'ClientMsgId': clientMsgId
+      }
+    }
+    let url, pm
+    switch (msg.MsgType) {
+      case this.conf.MSGTYPE_TEXT:
+        url = this.conf.API_webwxsendmsg
+        if (msg.SubMsgType === this.conf.MSGTYPE_LOCATION) {
+          data.Msg.Type = this.conf.MSGTYPE_LOCATION
+          data.Msg.Content = msg.OriContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        }
+        break
+      case this.conf.MSGTYPE_IMAGE:
+        url = this.conf.API_webwxsendmsgimg
+        break
+      case this.conf.MSGTYPE_EMOTICON:
+        url = this.conf.API_webwxsendemoticon
+        params.fun = 'sys'
+        data.Msg.EMoticonMd5 = msg.Content.replace(/^[\s\S]*?md5\s?=\s?"(.*?)"[\s\S]*?$/, '$1')
+        if (!data.Msg.EMoticonMd5) {
+          throw new Error('商店表情不能转发')
+        }
+        data.Msg.EmojiFlag = 2
+        data.Scene = 0
+        delete data.Msg.MediaId
+        delete data.Msg.Content
+        break
+      case this.conf.MSGTYPE_MICROVIDEO:
+      case this.conf.MSGTYPE_VIDEO:
+        url = this.conf.API_webwxsendmsgvedio
+        data.Msg.Type = this.conf.MSGTYPE_VIDEO
+        break
+      case this.conf.MSGTYPE_APP:
+        url = this.conf.API_webwxsendappmsg
+        data.Msg.Type = msg.AppMsgType
+        data.Msg.Content = data.Msg.Content.replace(
+          /^[\s\S]*?(<appmsg[\s\S]*?<attachid>)[\s\S]*?(<\/attachid>[\s\S]*?<\/appmsg>)[\s\S]*?$/,
+          `$1${msg.MediaId}$2`)
+        break
+      default:
+        throw new Error('该消息类型不能直接转发')
+    }
+    let options = {
+      method: 'POST',
+      url: url,
+      params: params,
+      data: data
+    }
+    return Promise.resolve().then(() => {
+      return this.request(data).then(res => {
+        let data = res.data
+        assert.equal(data.BaseResponse.Ret, 0, res)
+        return data
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '转发消息失败'
+      throw err
+    })
+  }
+
+  getMsgImg (msgId) {
+    let params = {
+      MsgID: msgId,
+      skey: this.prop.skey,
+      type: 'big'
+    }
+    let options = {
+      method: 'GET',
+      url: this.conf.API_webwxgetmsgimg,
+      params: params,
+      responseType: 'arraybuffer'
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        return {
+          data: res.data,
+          type: res.headers['content-type']
+        }
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '获取图片或表情失败'
+      throw err
+    })
+  }
+
+  getVideo (msgId) {
+    let params = {
+      MsgID: msgId,
+      skey: this.prop.skey
+    }
+    let options = {
+      method: 'GET',
+      url: this.conf.API_webwxgetvideo,
+      headers: {
+        'Range': 'bytes=0-'
+      },
+      params: params,
+      responseType: 'arraybuffer'
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        return {
+          data: res.data,
+          type: res.headers['content-type']
+        }
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '获取视频失败'
+      throw err
+    })
+  }
+
+  getVoice (msgId) {
+    let params = {
+      MsgID: msgId,
+      skey: this.prop.skey
+    }
+    let options = {
+      method: 'GET',
+      url: this.conf.API_webwxgetvoice,
+      params: params,
+      responseType: 'arraybuffer'
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        return {
+          data: res.data,
+          type: res.headers['content-type']
+        }
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '获取声音失败'
+      throw err
+    })
+  }
+
+  getHeadImg (HeadImgUrl) {
+    let url = this.CONF.origin + HeadImgUrl
+    let options = {
+      method: 'GET',
+      url: url,
+      responseType: 'arraybuffer'
+    }
+    return Promise.resolve().then(() => {
+      return this.request(options).then(res => {
+        return {
+          data: res.data,
+          type: res.headers['content-type']
+        }
+      })
+    }).catch(err => {
+      debug(err)
+      err.msg = '获取头像失败'
+      throw err
+    })
+  }
+
+  getDoc (FromUserName, MediaId, FileName) {
+    let params = {
+      sender: FromUserName,
+      mediaid: MediaId,
+      filename: FileName,
+      fromuser: this.user.UserName,
+      pass_ticket: this.prop.passTicket,
+      webwx_data_ticket: this.prop.webwxDataTicket
+    }
+    let options = {
+      method: 'GET',
+      url: this.conf.API_webwxdownloadmedia,
+      params: params,
+      responseType: 'arraybuffer'
+    }
+    return Promise.resolve().then(() => {
+      return this.request().then(res => {
+        return {
+          data: res.data,
+          type: res.headers['content-type']
+        }
+      })
+    }).catch(err => {
+      debug(err)
+      err.tips = '获取文件失败'
+      throw err;
     })
   }
 
@@ -668,7 +994,6 @@ export default class wxCore {
     } else if (fun === 'invitemember') {
       data.InviteMemberList = MemberList[0].UserName
     }
-    console.log(MemberList.toString())
     let options = {
       method : 'POST',
       url : this.conf.API_webwxupdatechatroom,
@@ -678,7 +1003,6 @@ export default class wxCore {
     return Promise.resolve().then(() => {
       return this.request(options).then(result => {
         let data =result.data
-        console.log(data)
         assert.equal(data.BaseResponse.Ret,0,result)
         return data
       })
@@ -785,7 +1109,6 @@ export default class wxCore {
     }
     return Promise.resolve().then(() => {      
       return this.request(options).then(res => {
-        console.log(JSON.stringify(res))
         let data = res.data
         assert.equal(data.BaseResponse.Ret, 0, res)
       })

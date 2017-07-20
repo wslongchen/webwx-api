@@ -12,6 +12,15 @@ let bot
  * 尝试获取本地登录数据，免扫码
  * 这里演示从本地文件中获取数据
  */
+/*fs.readFile("./qr.jpg", function(err, data) {
+    if(err) {
+        // Deal with error.
+    } else {
+        // Deal with data
+      console.log(data.length)
+    }
+  });
+ return;*/
 try {
   bot = new Wechat(require('./sync-data.json'))
   bot.tulingKey = 'f6a4b574b35b4da1aa1477ca193bb687';
@@ -53,7 +62,11 @@ bot.on('contacts-updated', contacts => {
 
 bot.on('login', () => {
   console.log('登录了')
-  fs.writeFileSync('./sync-data.json', JSON.stringify(bot.wxData))
+  //fs.writeFileSync('./sync-data.json', JSON.stringify(bot.wxData))
+/*  const rs = fs.createReadStream("./qr.jpg");
+  //let data = fs.readFileSync("./qr.jpg")
+
+  bot.sendMsg({file:rs,filename:'qr.jpg'},'filehelper')*/
 })
 
 /**
@@ -80,6 +93,7 @@ bot.on('message', msg => {
      if(bot.contacts[msg.FromUserName].isSelf){
       //本人
       console.log('回复消息给：'+bot.contacts[msg.ToUserName].NickName)
+      //bot.updateRemarkName(msg.ToUserName,"老大")
      }else{
       console.log('发送人：'+bot.contacts[msg.FromUserName].getDisplayName())
      }
