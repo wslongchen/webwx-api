@@ -6,7 +6,6 @@ const qrcode = require('qrcode-terminal')
 const fs = require('fs')
 const request = require('request')
 
-
 let bot
 /**
  * 尝试获取本地登录数据，免扫码
